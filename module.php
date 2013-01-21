@@ -1,12 +1,14 @@
 <?php 
 /**
- * @version $Id: module.php 982 2012-10-09 15:32:19Z roosit $
  * @package Abricos
  * @subpackage URating
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
+/**
+ * Модуль расчета пользовательского рейтинга
+ */
 class URatingModule extends Ab_Module {
 	
 	/**

@@ -1,6 +1,5 @@
 <?php
 /**
- * @version $Id: dbquery.php 989 2012-10-10 17:11:31Z roosit $
  * @package Abricos
  * @subpackage URating
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
