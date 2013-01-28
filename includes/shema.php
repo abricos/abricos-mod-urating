@@ -37,7 +37,7 @@ if ($updateManager->isInstall()){
 			UNIQUE KEY `modcalc` (`userid`, `module`)
 		)".$charset
 	);
-	
+
 	/*	
 	$db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."ugr_user (
@@ -68,5 +68,24 @@ if ($updateManager->isInstall()){
 	);
 	/**/
 }
+
+if ($updateManager->isUpdate('0.1.1')){
+	// голосование за комментарий
+	$db->query_write("
+		CREATE TABLE IF NOT EXISTS ".$pfx."cmt_modvote (
+			`module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+			`elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
+			`elementid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
+			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
+				
+			`voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ЗА (возможно кол-во)',
+			`votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ПРОТИВ (возможно кол-во)',
+
+			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
+			UNIQUE KEY `comment` (`commentid`,`userid`)
+		)".$charset
+	);
+}
+
 
 ?>
