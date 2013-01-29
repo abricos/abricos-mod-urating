@@ -19,10 +19,18 @@ if ($updateManager->isInstall()){
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_user (
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 			
-			`skill` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сила',
+			`reputation` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Репутация пользователя',
+			`voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ЗА пользователя',
+			`votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ПРОТИВ пользователя',
+			`votecount` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Кол-во голосов за репутацию',
+			`votedate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета репутации',
+			
+			`skill` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сила (рейтинг)',
 			
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
-			UNIQUE KEY `user` (`userid`)
+			UNIQUE KEY `user` (`userid`),
+			KEY (`reputation`),
+			KEY (`skill`)
 		)".$charset
 	);
 	
@@ -38,41 +46,13 @@ if ($updateManager->isInstall()){
 		)".$charset
 	);
 
-	/*	
-	$db->query_write("
-		CREATE TABLE IF NOT EXISTS ".$pfx."ugr_user (
-			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
-			
-			`urvalue` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Результат отношения к пользователю',
-			`urcount` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Кол-во голосов',
-			`urpiston` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Кол-во пистонов для голосования',
-			
-			UNIQUE KEY `user` (`userid`)
-		)".$charset
-	);
-
-	// отношение пользователя к пользователю +1 0 -1
-	$db->query_write("
-		CREATE TABLE IF NOT EXISTS ".$pfx."urg_userrelation (
-			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Тот, кому ставят оценку',
-			`fromuserid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Тот, кто ее ставит',
-			`rating` int(1) NOT NULL DEFAULT 0 COMMENT '-1 0 +1',
-				
-			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Создания',
-			`deldate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Удаления',
-			`updatedate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Обновления',
-	
-			KEY `userid` (`userid`),
-			UNIQUE KEY `relation` (`userid`,`fromuserid`)
-		)".$charset
-	);
-	/**/
 }
 
 if ($updateManager->isUpdate('0.1.1')){
+	
 	// голосование за комментарий
 	$db->query_write("
-		CREATE TABLE IF NOT EXISTS ".$pfx."cmt_modvote (
+		CREATE TABLE IF NOT EXISTS ".$pfx."urating_elementvote (
 			`module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			`elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			`elementid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
@@ -82,10 +62,25 @@ if ($updateManager->isUpdate('0.1.1')){
 			`votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ПРОТИВ (возможно кол-во)',
 
 			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
-			UNIQUE KEY `comment` (`commentid`,`userid`)
+			
+			UNIQUE KEY `modvote` (`module`,`elementtype`,`elementid`,`userid`),
+			KEY `userid` (`userid`),
+			KEY `element` (`module`,`elementtype`,`elementid`)
 		)".$charset
 	);
 }
 
+if ($updateManager->isUpdate('0.1.1') && !$updateManager->isInstall()){
+	$db->query_write("
+		ALTER TABLE ".$pfx."urating_user
+			`reputation` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Репутация пользователя',
+			`voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ЗА пользователя',
+			`votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ПРОТИВ пользователя',
+			`votecount` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Кол-во голосов за репутацию',
+			`votedate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета репутации',
+			ADD KEY (`reputation`),
+			ADD KEY (`skill`)
+	");
+}
 
 ?>

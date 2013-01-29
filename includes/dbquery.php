@@ -8,6 +8,40 @@
 
 class URatingQuery {
 	
+	public static function UserReputation(Ab_Database $db, $userid){
+		$sql = "
+			SELECT
+				userid as id,
+				reputation as rep,
+				votecount as vcnt,
+				skill
+			FROM ".$db->prefix."urating_user
+			WHERE userid=".bkint($userid)."
+			LIMIT 1
+		";
+		return $db->query_first($sql);
+	}
+	
+	public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid){
+		$sql = "
+			SELECT 
+				module as m,
+				elementtype as tp,
+				elementid as elid,
+				userid as uid,
+				voteup as vup,
+				votedown as vdown,
+				dateline as dl
+			FROM ".$db->prefix."urating_elementvote
+			WHERE module='".bkstr($modname)."' 
+				AND elementtype='".bkstr($eltype)."' 
+				AND elementid=".bkint($elid)."
+				AND userid=".bkint($userid)."
+			LIMIT 1
+		";
+		return $db->query_first($sql);
+	}
+	
 	public static function CalculateUserList(Ab_Database $db, $sqls){
 		
 		$sql = "

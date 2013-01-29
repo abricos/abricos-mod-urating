@@ -68,7 +68,7 @@ class URatingManager extends Ab_ModuleManager {
 	}
 	
 	/**
-	 * Обработать голос пользователя за элемент
+	 * Обработать голос пользователя за элемент модуля
 	 * 
 	 * @param object $d
 	 * @return URatingElementVoteResult
@@ -82,11 +82,52 @@ class URatingManager extends Ab_ModuleManager {
 		$module = Abricos::GetModule($d->modname);
 		if (empty($module)){ return null; }
 		$manager = $module->GetManager();
-		if (!method_exists($manager, 'URating_ElementVoting')){
+		if (!method_exists($manager, 'URating_IsElementVoting')){
+			return null;
+		}
+		
+		// Может этот пользователь уже ставил голос на этот элемент?
+		$dbUVote = URatingQuery::ElementVoteByUser($this->db, $d->module, $d->eltype, $d->elid, $this->userid);
+		
+		if (!empty($dbUVote)){ // уже поставлен голос за этот элемент
+			return null;
+		}
+		
+		// Можно ли ставить голос текущему пользователю за этот элемент
+		// Нужно спросить сам модуль
+
+		$uRep = $this->UserReputation($this->userid);
+		if (!$manager->URating_IsElementVoting($uRep, $d->vote, $d->elid, $d->eltype)){
 			return null;
 		}
 		
 		return $manager->URating_ElementVoting($d->vote, $d->elid, $d->eltype);
+	}
+	
+	private $_repCache = array();
+	
+	/**
+	 * Репутация пользователя
+	 * 
+	 * @param integer $userid если 0, то текущий пользователь
+	 * @return URatingUserReputation
+	 */
+	public function UserReputation($userid = 0){
+		if (!$this->IsViewRole()){ return null; }
+		if ($userid == 0){
+			$userid = $this->userid;
+		}
+		if (!empty($this->_repCache[$userid])){
+			return $this->_repCache[$userid];
+		}
+		if ($userid == 0){
+			return new URatingUserReputation($userid, array());
+		}
+		
+		$row = URatingQuery::UserReputation($this->db, $userid);
+		$this->_repCache[$userid] = new URatingUserReputation($userid, $row);
+		
+		return $this->_repCache[$userid];
 	}
 	
 	/**

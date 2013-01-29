@@ -7,6 +7,43 @@
  */
 
 /**
+ * Репутация пользователя
+ */
+class URatingUserReputation {
+	
+	/**
+	 * Пользователь
+	 * @var integer
+	 */
+	public $userid; 
+	
+	/**
+	 * Репутация
+	 * @var integer
+	 */
+	public $reputation;
+	
+	/**
+	 * Количество голосов
+	 * @var integer
+	 */
+	public $votecount;
+	
+	/**
+	 * Рейтинг
+	 * @var integer
+	 */
+	public $skill;
+	
+	public function __construct($userid, $d){
+		$this->id 				= $userid; 
+		$this->reputation		= intval($d['rep']);
+		$this->votecount		= intval($d['vcnt']);
+		$this->skill			= intval($d['skill']);
+	}
+}
+
+/**
  * Результат голосования по элементу модуля
  */
 class URatingElementVoteResult {
