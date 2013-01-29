@@ -7,6 +7,7 @@
  */
 
 require_once 'dbquery.php';
+require_once 'classes.php';
 
 class URatingManager extends Ab_ModuleManager {
 	
@@ -42,7 +43,7 @@ class URatingManager extends Ab_ModuleManager {
 	
 	public function AJAX($d){
 		switch($d->do){
-			// case 'projectlist': return $this->ProjectList($d->userid);
+			case 'elementvoting': return $this->ElementVoting($d);
 		}
 		return null;
 	}
@@ -64,6 +65,28 @@ class URatingManager extends Ab_ModuleManager {
 			$ret[$row[$field]] = $row;
 		}
 		return $ret;
+	}
+	
+	/**
+	 * Обработать голос пользователя за элемент
+	 * 
+	 * @param object $d
+	 * @return URatingElementVoteResult
+	 */
+	public function ElementVoting($d){
+		if ($this->IsWriteRole()){ return null; }
+		if ($d->vote != 'up' || $d->vote != 'down' || $d->vote != 'refrain'){
+			return null;
+		}
+		
+		$module = Abricos::GetModule($d->modname);
+		if (empty($module)){ return null; }
+		$manager = $module->GetManager();
+		if (!method_exists($manager, 'URating_ElementVoting')){
+			return null;
+		}
+		
+		return $manager->URating_ElementVoting($d->vote, $d->elid, $d->eltype);
 	}
 	
 	/**

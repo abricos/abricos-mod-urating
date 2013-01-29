@@ -1,0 +1,31 @@
+.aw-urating .voting {
+	position: relative;
+	padding: 0 20px;
+}
+
+.aw-urating .voting .bup,
+.aw-urating .voting .bdown {
+	position: absolute;
+	width: 9px;
+	height: 11px;
+	cursor: pointer;
+}
+.aw-urating .voting .bup,
+.aw-urating .voting .bdown {
+	top: 1px;
+	background: url(/modules/urating/images/icons.png?v=1) no-repeat;
+}
+.aw-urating .voting .bup {
+	left: 0;
+	background-position: 0px 0px;
+}
+.aw-urating .voting .bdown {
+	right: 0;
+	background-position: -10px 0px;
+}
+.aw-urating .voting .bup:HOVER {
+	background-position: -40px 0px;
+}
+.aw-urating .voting .bdown:HOVER {
+	background-position: -50px 0px;
+}
