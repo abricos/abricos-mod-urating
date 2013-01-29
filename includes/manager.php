@@ -101,7 +101,7 @@ class URatingManager extends Ab_ModuleManager {
 			return null;
 		}
 		
-		return $manager->URating_ElementVoting($d->vote, $d->elid, $d->eltype);
+		// return $manager->URating_ElementVoting($d->vote, $d->elid, $d->eltype);
 	}
 	
 	private $_repCache = array();
@@ -129,6 +129,32 @@ class URatingManager extends Ab_ModuleManager {
 		
 		return $this->_repCache[$userid];
 	}
+	
+	/**
+	 * Можно ли проголосовать текущему пользователю за 
+	 * репутацию пользователя
+	 *
+	 * Метод вызывается из модуля urating
+	 *
+	 * @param URatingUserReputation $uRep
+	 * @param string $vote
+	 * @param integer $userid
+	 * @param string $eltype
+	 */
+	public function URating_IsElementVoting(URatingUserReputation $uRep, $vote, $userid, $eltype){
+		if ($userid == $this->userid){ // нельзя голосовать за самого себя
+			return false;
+		}
+		if ($this->IsAdminRole()){ // админу можно голосовать всегда
+			return true;
+		}
+		
+		if ($uRep->reputation < 1){ // голосовать можно только с положительным рейтингом
+			return false;
+		} 
+		
+	}
+	
 	
 	/**
 	 * Расчет рейтинга пользователей

@@ -22,6 +22,25 @@ class URatingQuery {
 		return $db->query_first($sql);
 	}
 	
+	/**
+	 * Количество используемых голосов за прошедшие сутки
+	 * @param Ab_Database $db
+	 * @param unknown_type $userid
+	 */
+	public function ElementVoteCountDayByUser(Ab_Database $db, $userid){
+		$day = 60*60*24;
+		$t1 = intval(round(TIMENOW/$day)*$day);
+		$sql = "
+			SELECT
+				module as m, 
+				count(*) as cnt
+			FROM ".$db->prefix."urating_elementvote
+			WHERE userid=".bkint($userid)." AND dateline>".$t1."
+			GROUP BY module
+		";
+		return $db->query_first($sql);
+	}
+	
 	public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid){
 		$sql = "
 			SELECT 
