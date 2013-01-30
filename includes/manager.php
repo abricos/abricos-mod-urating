@@ -70,38 +70,60 @@ class URatingManager extends Ab_ModuleManager {
 	/**
 	 * Обработать голос пользователя за элемент модуля
 	 * 
+	 * Коды ошибок:
+	 *   null - ошибка доступа, неверного запроса и еще чего либо непонятного;
+	 *   1 - пользователь уже голосовал за этот элемент;
+	 *   2 - модуль не разрешил ставить голос за элемент (см. код ошибки в merror);
+	 *   0 - все нормально, голос установлен
+	 * 
 	 * @param object $d
-	 * @return URatingElementVoteResult
+	 * @return object
 	 */
 	public function ElementVoting($d){
-		if ($this->IsWriteRole()){ return null; }
-		if ($d->vote != 'up' || $d->vote != 'down' || $d->vote != 'refrain'){
+		if (!$this->IsWriteRole()){ return null; }
+		if (!($d->vote == 'up' || $d->vote == 'down' || $d->vote == 'refrain')){
 			return null;
 		}
-		
-		$module = Abricos::GetModule($d->modname);
+
+		$module = Abricos::GetModule($d->module);
 		if (empty($module)){ return null; }
 		$manager = $module->GetManager();
 		if (!method_exists($manager, 'URating_IsElementVoting')){
 			return null;
 		}
+		$ret = new stdClass();
+		$ret->error = 0;
 		
 		// Может этот пользователь уже ставил голос на этот элемент?
 		$dbUVote = URatingQuery::ElementVoteByUser($this->db, $d->module, $d->eltype, $d->elid, $this->userid);
 		
 		if (!empty($dbUVote)){ // уже поставлен голос за этот элемент
-			return null;
+			$ret->error = 1;
+			return $ret;
 		}
 		
 		// Можно ли ставить голос текущему пользователю за этот элемент
 		// Нужно спросить сам модуль
-
 		$uRep = $this->UserReputation($this->userid);
-		if (!$manager->URating_IsElementVoting($uRep, $d->vote, $d->elid, $d->eltype)){
-			return null;
+		$ret->merror = $manager->URating_IsElementVoting($uRep, $d->vote, $d->elid, $d->eltype);
+		if ($ret->merror > 0){ // модуль не дал разрешение на устновку голоса
+			$ret->error = 2;
+			return $ret;
+		}
+		// голосование за элемент разрешено модулем
+		$voteup = 0;
+		$votedown = 0;
+		if ($d->vote == 'up'){
+			$voteup = 1;
+		}else if ($d->vote == 'down'){
+			$votedown = 1;
 		}
 		
-		// return $manager->URating_ElementVoting($d->vote, $d->elid, $d->eltype);
+		URatingQuery::ElementVoteAppend($this->db, $d->module, 
+				$d->eltype, $d->elid, $this->userid, $voteup, $votedown);
+		
+		$ret->vote = URatingQuery::ElementVoteCalc($this->db, $d->module, $d->eltype, $d->elid);
+		return $ret;
 	}
 	
 	private $_repCache = array();
@@ -130,11 +152,34 @@ class URatingManager extends Ab_ModuleManager {
 		return $this->_repCache[$userid];
 	}
 	
+	private $_voteCountCache = null;
+	
+	/**
+	 * Количество голосов по элементам модулей в текущих сутках 
+	 */
+	public function UserVoteCountByDay(){
+		if (!is_null($this->_voteCountCache)){
+			return $this->_voteCountCache;
+		}
+		$rows = URatingQuery::ElementVoteCountDayByUser($this->db, $this->userid);
+		
+		$this->_voteCountCache = $this->ToArrayId($rows);
+		
+		return $this->_voteCountCache;
+	}
+	
 	/**
 	 * Можно ли проголосовать текущему пользователю за 
 	 * репутацию пользователя
 	 *
 	 * Метод вызывается из модуля urating
+	 * 
+	 * Возвращает код ошибки:
+	 *  0 - все нормально, голосовать можно;
+	 *  1 - нельзя голосовать за самого себя;
+	 *  2 - голосовать можно только с положительным рейтингом;
+	 *  3 - недостаточно голосов (закончились голоса)
+	 *  
 	 *
 	 * @param URatingUserReputation $uRep
 	 * @param string $vote
@@ -143,16 +188,25 @@ class URatingManager extends Ab_ModuleManager {
 	 */
 	public function URating_IsElementVoting(URatingUserReputation $uRep, $vote, $userid, $eltype){
 		if ($userid == $this->userid){ // нельзя голосовать за самого себя
-			return false;
+			return 1;
 		}
 		if ($this->IsAdminRole()){ // админу можно голосовать всегда
-			return true;
+			return 0;
 		}
 		
 		if ($uRep->reputation < 1){ // голосовать можно только с положительным рейтингом
-			return false;
-		} 
+			return 2;
+		}
 		
+		$votes = $this->UserVoteCountByDay();
+		
+		// голосов за репутацию равно кол-ву голосов самой репутации
+		$voteRepCount = $votes['urating'];
+		if ($uRep->reputation > $voteRepCount){
+			return 3;
+		}
+		
+		return 0;
 	}
 	
 	

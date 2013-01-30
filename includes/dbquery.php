@@ -22,6 +22,11 @@ class URatingQuery {
 		return $db->query_first($sql);
 	}
 	
+	public function ElementVote(){
+		
+		
+	}
+	
 	/**
 	 * Количество используемых голосов за прошедшие сутки
 	 * @param Ab_Database $db
@@ -32,9 +37,9 @@ class URatingQuery {
 		$t1 = intval(round(TIMENOW/$day)*$day);
 		$sql = "
 			SELECT
-				module as m, 
+				module as id,
 				count(*) as cnt
-			FROM ".$db->prefix."urating_elementvote
+			FROM ".$db->prefix."urating_vote
 			WHERE userid=".bkint($userid)." AND dateline>".$t1."
 			GROUP BY module
 		";
@@ -51,11 +56,78 @@ class URatingQuery {
 				voteup as vup,
 				votedown as vdown,
 				dateline as dl
-			FROM ".$db->prefix."urating_elementvote
+			FROM ".$db->prefix."urating_vote
 			WHERE module='".bkstr($modname)."' 
 				AND elementtype='".bkstr($eltype)."' 
 				AND elementid=".bkint($elid)."
 				AND userid=".bkint($userid)."
+			LIMIT 1
+		";
+		return $db->query_first($sql);
+	}
+	
+	public static function ElementVoteAppend(Ab_Database $db, $modname, $eltype, $elid, $userid, $voteup, $votedown){
+		// добавление голоса
+		$sql = "
+			INSERT IGNORE INTO ".$db->prefix."urating_vote
+			(module, elementtype, elementid, userid, voteup, votedown, dateline) VALUES
+			(
+				'".bkstr($modname)."', 
+				'".bkstr($eltype)."',
+				".bkint($elid).", 
+				".bkint($userid).",
+				".bkint($voteup).",
+				".bkint($votedown).",
+				".TIMENOW."
+			 )
+		";
+		$db->query_write($sql);
+		
+		// подсчет итога
+		$sql = "
+			SELECT
+				count(*) as votecount, 
+				sum(voteup) as voteup,
+				sum(votedown) as votedown
+			FROM ".$db->prefix."urating_vote
+			WHERE module='".bkstr($modname)."' 
+				AND elementtype='".bkstr($eltype)."' 
+				AND elementid=".bkint($elid)."
+			GROUP BY module, elementtype, elementid
+		";
+		$row = $db->query_first($sql);
+		
+		// запись результата
+		$sql = "
+			INSERT INTO ".$db->prefix."urating_votecalc
+			(module, elementtype, elementid, votecount, voteup, votedown, upddate) VALUES
+			(
+				'".bkstr($modname)."',
+				'".bkstr($eltype)."',
+				".bkint($elid).",
+				".bkint($row['votecount']).",
+				".bkint($row['voteup']).",
+				".bkint($row['votedown']).",
+				".TIMENOW."
+			) ON DUPLICATE KEY UPDATE
+				votecount=".bkint($row['votecount']).",
+				voteup=".bkint($row['voteup']).",
+				votedown=".bkint($row['votedown']).",
+				upddate=".TIMENOW."
+		";
+		$db->query_write($sql);
+	}
+	
+	public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid){
+		$sql = "
+			SELECT
+				votecount as cnt,
+				voteup as up,
+				votedown as down
+			FROM ".$db->prefix."urating_votecalc
+			WHERE module='".bkstr($modname)."'
+				AND elementtype='".bkstr($eltype)."'
+				AND elementid=".bkint($elid)."
 			LIMIT 1
 		";
 		return $db->query_first($sql);
