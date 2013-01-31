@@ -42,6 +42,25 @@ class URatingModule extends Ab_Module {
 		return $this->_manager;
 	}
 	
+	/**
+	 * Этот метод запрашивает модуль URating (т.е. сам у себя, так как этот 
+	 * же модуль отвечает и за репутацию пользователя)
+	 */
+	public function URating_SQLCheckCalculate(){
+		$db = Abricos::$db;
+		return "
+			SELECT
+				DISTINCT u.userid as uid,
+				'".$this->name."' as m
+			FROM ".$db->prefix."urating_user u
+			LEFT JOIN ".$db->prefix."urating_modcalc mc ON u.userid=mc.userid
+			WHERE (mc.module='".bkstr($this->name)."' 
+				AND mc.upddate + ".URatingModule::PERIOD_CHECK." < u.votedate) 
+				OR ISNULL(mc.upddate)
+			LIMIT 30
+		";
+	}
+	
 }
 
 

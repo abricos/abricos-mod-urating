@@ -123,6 +123,11 @@ class URatingManager extends Ab_ModuleManager {
 				$d->eltype, $d->elid, $this->userid, $voteup, $votedown);
 		
 		$ret->vote = URatingQuery::ElementVoteCalc($this->db, $d->module, $d->eltype, $d->elid);
+		
+		if (method_exists($manager, 'URating_OnElementVoting')){
+			$manager->URating_OnElementVoting($d->eltype, $d->elid, $ret->vote);
+		}
+		
 		return $ret;
 	}
 	
@@ -169,48 +174,6 @@ class URatingManager extends Ab_ModuleManager {
 	}
 	
 	/**
-	 * Можно ли проголосовать текущему пользователю за 
-	 * репутацию пользователя
-	 *
-	 * Метод вызывается из модуля urating
-	 * 
-	 * Возвращает код ошибки:
-	 *  0 - все нормально, голосовать можно;
-	 *  1 - нельзя голосовать за самого себя;
-	 *  2 - голосовать можно только с положительным рейтингом;
-	 *  3 - недостаточно голосов (закончились голоса)
-	 *  
-	 *
-	 * @param URatingUserReputation $uRep
-	 * @param string $vote
-	 * @param integer $userid
-	 * @param string $eltype
-	 */
-	public function URating_IsElementVoting(URatingUserReputation $uRep, $vote, $userid, $eltype){
-		if ($userid == $this->userid){ // нельзя голосовать за самого себя
-			return 1;
-		}
-		if ($this->IsAdminRole()){ // админу можно голосовать всегда
-			return 0;
-		}
-		
-		if ($uRep->reputation < 1){ // голосовать можно только с положительным рейтингом
-			return 2;
-		}
-		
-		$votes = $this->UserVoteCountByDay();
-		
-		// голосов за репутацию равно кол-ву голосов самой репутации
-		$voteRepCount = $votes['urating'];
-		if ($uRep->reputation > $voteRepCount){
-			return 3;
-		}
-		
-		return 0;
-	}
-	
-	
-	/**
 	 * Расчет рейтинга пользователей
 	 * 
 	 * 1. запросить sql шаблоны запросов для определения пользователей перерасчета
@@ -223,9 +186,11 @@ class URatingManager extends Ab_ModuleManager {
 			$this->UserClear($this->userid);
 		}
 		
+		// зарегистрировать все модули
 		Abricos::$instance->modules->RegisterAllModule();
 		$modules = Abricos::$instance->modules->GetModules();
 		
+		// опросить каждый модуль на наличие метода запроса SQL по форме
 		$sqls = array();
 		foreach ($modules as $name => $module){
 			if (!method_exists($module, 'URating_SQLCheckCalculate')){
@@ -236,10 +201,14 @@ class URatingManager extends Ab_ModuleManager {
 			array_push($sqls, "(".$sql.")");
 		}
 		
+		// объеденить все SQL запросы модулей в один запрос и получить список 
+		// пользователей нуждающихся в пересчете данных рейтинга 
 		$uids = array();
 		$rows = URatingQuery::CalculateUserList($this->db, $sqls);
 		while (($row = $this->db->fetch_array($rows))){
 			$uids[$row['uid']] = $row['uid'];
+			
+			// пользователь и модуль определен - запрос пересчета
 			$this->UserCalculateByModule($row['m'], $row['uid']);
 		}
 		$nuids = array();
@@ -250,16 +219,21 @@ class URatingManager extends Ab_ModuleManager {
 	}
 	
 	/**
-	 * Рассчет рейтинга пользователя по модулю
+	 * Пересчет рейтинг пользователя по данным модуля
 	 */
 	public function UserCalculateByModule($modname, $userid){
 		$module = Abricos::GetModule($modname);
+		if (empty($module)){ return; }
 		
-		if (empty($module) || !method_exists($module, 'URating_UserCalculate')){
+		$manager = $module->GetManager();
+		if (empty($manager) || !method_exists($manager, 'URating_UserCalculate')){
 			return;
 		}
-			
-		$d = $module->URating_UserCalculate($userid);
+		
+		// посчитать рейтинг пользователя
+		$d = $manager->URating_UserCalculate($userid);
+		
+		// обновить данные
 		URatingQuery::UserSkillModuleUpdate($this->db, $userid, $modname, $d->skill);
 	}
 
@@ -284,6 +258,80 @@ class URatingManager extends Ab_ModuleManager {
 	public function UserClear($userid){
 		URatingQuery::UserSkillClear($this->db, $userid);
 	}
+	
+	/**
+	 * Можно ли проголосовать текущему пользователю за репутацию пользователя
+	 *
+	 * Метод вызывается из модуля URating
+	 *
+	 * Возвращает код ошибки:
+	 *  0 - все нормально, голосовать можно;
+	 *  1 - нельзя голосовать за самого себя;
+	 *  2 - голосовать можно только с положительным рейтингом;
+	 *  3 - недостаточно голосов (закончились голоса)
+	 *
+	 *
+	 * @param URatingUserReputation $uRep
+	 * @param string $vote
+	 * @param integer $userid
+	 * @param string $eltype
+	 */
+	public function URating_IsElementVoting(URatingUserReputation $uRep, $vote, $userid, $eltype){
+		if ($userid == $this->userid){ // нельзя голосовать за самого себя
+			return 1;
+		}
+		if ($this->IsAdminRole()){ // админу можно голосовать всегда
+			return 0;
+		}
+	
+		if ($uRep->reputation < 1){ // голосовать можно только с положительным рейтингом
+			return 2;
+		}
+	
+		$votes = $this->UserVoteCountByDay();
+	
+		// голосов за репутацию равно кол-ву голосов самой репутации
+		$voteRepCount = $votes['urating'];
+		if ($uRep->reputation > $voteRepCount){
+			return 3;
+		}
+	
+		return 0;
+	}
+	
+	/**
+	 * Занести результат расчета репутации пользователя
+	 *
+	 * Метод вызывается из модуля urating
+	 *
+	 * @param string $eltype
+	 * @param integer $elid
+	 * @param array $vote
+	 */
+	public function URating_OnElementVoting($eltype, $userid, $vote){
+	
+		// занести результат расчета репутации пользователя
+		URatingQuery::UserReputationUpdate($this->db, $userid, $vote['cnt'], $vote['up'], $vote['down']);
+	}
+	
+	/**
+	 * Расчет рейтинга пользователя
+	 *
+	 * Метод запрашивает модуль URating
+	 *
+	 * +10 - за каждый положительный голос в репутацию
+	 * -10 - за каждый отрицательный голос в репутацию
+	 *
+	 * @param integer $userid
+	 */
+	public function URating_UserCalculate($userid){
+		$rep = $this->UserReputation($userid);
+	
+		$ret = new stdClass();
+		$ret->skill = $rep->reputation;
+		return $ret;
+	}
+		
 }
 
 ?>

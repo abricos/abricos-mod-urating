@@ -8,25 +8,6 @@
 
 class URatingQuery {
 	
-	public static function UserReputation(Ab_Database $db, $userid){
-		$sql = "
-			SELECT
-				userid as id,
-				reputation as rep,
-				votecount as vcnt,
-				skill
-			FROM ".$db->prefix."urating_user
-			WHERE userid=".bkint($userid)."
-			LIMIT 1
-		";
-		return $db->query_first($sql);
-	}
-	
-	public function ElementVote(){
-		
-		
-	}
-	
 	/**
 	 * Количество используемых голосов за прошедшие сутки
 	 * @param Ab_Database $db
@@ -131,6 +112,40 @@ class URatingQuery {
 			LIMIT 1
 		";
 		return $db->query_first($sql);
+	}
+	
+	public static function UserReputation(Ab_Database $db, $userid){
+		$sql = "
+			SELECT
+				userid as id,
+				reputation as rep,
+				votecount as vcnt,
+				skill
+			FROM ".$db->prefix."urating_user
+			WHERE userid=".bkint($userid)."
+			LIMIT 1
+		";
+		return $db->query_first($sql);
+	}
+	
+	public static function UserReputationUpdate(Ab_Database $db, $userid, $votecount, $voteup, $votedown){
+		$sql = "
+			INSERT INTO ".$db->prefix."urating_user
+				(userid, reputation, votecount, voteup, votedown, votedate) VALUES (
+				".bkint($userid).",
+				".bkint($voteup-$votedown).",
+				".bkint($votecount).",
+				".bkint($voteup).",
+				".bkint($votedown).",
+				".TIMENOW."
+			) ON DUPLICATE KEY UPDATE
+				reputation=".bkint($voteup-$votedown).",
+				votecount=".bkint($votecount).",
+				voteup=".bkint($voteup).",
+				votedown=".bkint($votedown).",
+				votedate=".TIMENOW."
+		";
+		$db->query_write($sql);
 	}
 	
 	public static function CalculateUserList(Ab_Database $db, $sqls){
