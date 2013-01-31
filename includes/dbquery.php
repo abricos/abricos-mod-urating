@@ -149,7 +149,6 @@ class URatingQuery {
 	}
 	
 	public static function CalculateUserList(Ab_Database $db, $sqls){
-		
 		$sql = "
 			SELECT 
 				DISTINCT uu.uid, uu.m
@@ -158,11 +157,10 @@ class URatingQuery {
 			) uu
 			ORDER BY uu.uid
 		";
-		 
 		return $db->query_read($sql);
 	}
 	
-	public static function UserSkillModuleUpdate(Ab_Database $db, $userid, $module, $skill){
+	public static function UserRatingModuleUpdate(Ab_Database $db, $userid, $module, $skill){
 		$sql = "
 			INSERT INTO ".$db->prefix."urating_modcalc
 			(userid, module, skill, upddate) VALUES (
@@ -177,7 +175,7 @@ class URatingQuery {
 		$db->query_write($sql);
 	}
 	
-	public static function UserSkillCalculateList(Ab_Database $db, $userid){
+	public static function UserRatingCalculateList(Ab_Database $db, $userid){
 		if (!is_array($userid)){
 			$userid = array($userid);
 		}
@@ -199,7 +197,7 @@ class URatingQuery {
 		return $db->query_read($sql);
 	}
 	
-	public static function UserSkillUpdate(Ab_Database $db, $userid, $skill){
+	public static function UserRatingUpdate(Ab_Database $db, $userid, $skill){
 		$sql = "
 			INSERT INTO ".$db->prefix."urating_user
 				(userid, skill, upddate) VALUES (
@@ -213,7 +211,7 @@ class URatingQuery {
 		$db->query_write($sql);
 	}
 	
-	public static function UserSkillClear(Ab_Database $db, $userid){
+	public static function UserRatingClear(Ab_Database $db, $userid){
 		if (!is_array($userid)){
 			$userid = array($userid);
 		}

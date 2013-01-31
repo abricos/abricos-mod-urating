@@ -183,7 +183,7 @@ class URatingManager extends Ab_ModuleManager {
 	public function Calculate($isClearCurrent = false){
 		
 		if ($isClearCurrent){
-			$this->UserClear($this->userid);
+			$this->UserRatingClear($this->userid);
 		}
 		
 		// зарегистрировать все модули
@@ -200,7 +200,7 @@ class URatingManager extends Ab_ModuleManager {
 			$sql = $module->URating_SQLCheckCalculate();
 			array_push($sqls, "(".$sql.")");
 		}
-		
+
 		// объеденить все SQL запросы модулей в один запрос и получить список 
 		// пользователей нуждающихся в пересчете данных рейтинга 
 		$uids = array();
@@ -234,7 +234,7 @@ class URatingManager extends Ab_ModuleManager {
 		$d = $manager->URating_UserCalculate($userid);
 		
 		// обновить данные
-		URatingQuery::UserSkillModuleUpdate($this->db, $userid, $modname, $d->skill);
+		URatingQuery::UserRatingModuleUpdate($this->db, $userid, $modname, $d->skill);
 	}
 
 	/**
@@ -246,17 +246,17 @@ class URatingManager extends Ab_ModuleManager {
 			$usersid = array($usersid);
 		}
 		
-		$rows = URatingQuery::UserSkillCalculateList($this->db, $usersid);
+		$rows = URatingQuery::UserRatingCalculateList($this->db, $usersid);
 		while (($row = $this->db->fetch_array($rows))){
-			URatingQuery::UserSkillUpdate($this->db, $row['id'], $row['skill']);
+			URatingQuery::UserRatingUpdate($this->db, $row['id'], $row['skill']);
 		}
 	}
 	
 	/**
 	 * Обнуление рейтинга для пересчета
 	 */
-	public function UserClear($userid){
-		URatingQuery::UserSkillClear($this->db, $userid);
+	public function UserRatingClear($userid){
+		URatingQuery::UserRatingClear($this->db, $userid);
 	}
 	
 	/**
@@ -309,9 +309,11 @@ class URatingManager extends Ab_ModuleManager {
 	 * @param array $vote
 	 */
 	public function URating_OnElementVoting($eltype, $userid, $vote){
-	
 		// занести результат расчета репутации пользователя
 		URatingQuery::UserReputationUpdate($this->db, $userid, $vote['cnt'], $vote['up'], $vote['down']);
+		
+		// обнулить расчеты рейтинга для пересчета
+		$this->UserRatingClear($userid);
 	}
 	
 	/**
@@ -328,7 +330,7 @@ class URatingManager extends Ab_ModuleManager {
 		$rep = $this->UserReputation($userid);
 	
 		$ret = new stdClass();
-		$ret->skill = $rep->reputation;
+		$ret->skill = $rep->reputation * 10;
 		return $ret;
 	}
 		

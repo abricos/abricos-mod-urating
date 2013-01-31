@@ -7,7 +7,7 @@
 .aw-urating .voting .bdown {
 	position: absolute;
 	width: 9px;
-	height: 11px;
+	height: 14px;
 	cursor: pointer;
 }
 .aw-urating .voting .bup,
@@ -15,17 +15,32 @@
 	top: 1px;
 	background: url(/modules/urating/images/icons.png?v=1) no-repeat;
 }
-.aw-urating .voting .bup {
-	left: 0;
+.aw-urating .voting .bup { left: 0; }
+.aw-urating .voting .bdown { right: 0; }
+
+.aw-urating .voting .w .bup,
+.aw-urating .voting .ro .bup {
 	background-position: 0px 0px;
 }
-.aw-urating .voting .bdown {
-	right: 0;
+.aw-urating .voting .w .bdown,
+.aw-urating .voting .ro .bdown {
 	background-position: -10px 0px;
 }
-.aw-urating .voting .bup:HOVER {
+.aw-urating .voting .w .bup:HOVER {
 	background-position: -40px 0px;
 }
-.aw-urating .voting .bdown:HOVER {
-	background-position: -50px 0px;
+.aw-urating .voting .w .bdown:HOVER {
+	background-position: -70px 0px;
+}
+.aw-urating .voting .ro .bup {
+	background-position: -80px 0px;
+}
+.aw-urating .voting .ro .bdown {
+	background-position: -90px 0px;
+}
+.aw-urating .voting .up .bup {
+	background-position: -40px 0px;
+}
+.aw-urating .voting .down .bup {
+	background-position: -70px 0px;
 }
