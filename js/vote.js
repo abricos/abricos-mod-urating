@@ -26,7 +26,8 @@ Component.entryPoint = function(NS){
 			'value': null,
 			'vote': null,
 			'readOnly': false,
-			'hideButtons': false
+			'hideButtons': false,
+			'onVotingError': null
 		}, cfg || {});
 		VotingWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'widget' 
@@ -47,8 +48,6 @@ Component.entryPoint = function(NS){
 			this.readOnly = cfg['readOnly'];
 			
 			this.hideButtons = cfg['hideButtons'];
-		},
-		onLoad: function(cfg){
 		},
 		onClick: function(el, tp){
 			if (this._clickBlocked){ return; }
@@ -83,10 +82,16 @@ Component.entryPoint = function(NS){
 			});
 		},
 		_onLoadData: function(d){
+			var cfg = this.cfg;
 			this._clickBlocked = false;
 			
 			if (L.isNull(d)){ return; }
-			if (d['error'] != 0){ return; }
+			if (d['error'] != 0){
+				if (L.isFunction(cfg['onVotingError'])){
+					cfg['onVotingError'](d['error'], d['merror']);
+				}
+				return; 
+			}
 			
 			var di = d['info'];
 			this.value = di['val'];
