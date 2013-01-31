@@ -55,13 +55,13 @@ Component.entryPoint = function(NS){
 			switch(el.id){
 			case tp['bup']: this.voteUp(); return true;
 			case tp['bvalue']: this.voteRefrain(); return true;
-			case tp['bdown']: this.voteUp(); return true;
+			case tp['bdown']: this.voteDown(); return true;
 			}
 		},
 		voteUp: function(){ this.ajax('up'); },
 		voteDown: function(){ this.ajax('down'); },
 		voteRefrain: function(){ this.ajax('refrain'); },
-		ajax: function(vote){
+		ajax: function(act){
 			if (UID == 0 || this.readOnly || !L.isNull(this.vote)){ 
 				return; 
 			}
@@ -75,20 +75,29 @@ Component.entryPoint = function(NS){
 					'module': cfg['modname'],
 					'eltype': cfg['elementType'],
 					'elid': cfg['elementId'],
-					'vote': vote
+					'act': act
 				},
 				'event': function(request){
-					__self._onLoadAjaxData(request.data);
+					__self._onLoadData(request.data);
 				}
 			});
 		},
-		_onLoadAjaxData: function(d){
+		_onLoadData: function(d){
 			this._clickBlocked = false;
+			
+			if (L.isNull(d)){ return; }
+			if (d['error'] != 0){ return; }
+			
+			var di = d['info'];
+			this.value = di['val'];
+			this.vote = di['vote'];
+			
+			this.render();
+			
 		},
 		render: function(){
-			
 			var vote = this.vote, value = this.value;
-			
+
 			this.elSetHTML({
 				'bvalue': L.isNull(value) ? '—' : value
 			});
@@ -103,22 +112,17 @@ Component.entryPoint = function(NS){
 				Dom.replaceClass(this.gel('status'), 'w', 'ro');
 			}
 			
-			var elStaVal = this.gel('statval');
+			var elStVal = this.gel('statval');
 			
-			Dom.removeClass(elStaVal, 'up');
-			Dom.removeClass(elStaVal, 'down');
-			Brick.console(vote);
+			Dom.removeClass(elStVal, 'up');
+			Dom.removeClass(elStVal, 'down');
+			
 			if (!L.isNull(vote)){
-				
-				switch(vote){
-				case -1:
-					Dom.addClass(elStaVal, 'down');
-					break;
-				case 1:
-					Dom.addClass(elStaVal, 'up');
-					break;
+				if (vote == -1){
+					Dom.addClass(elStVal, 'down');
+				}else if (vote == 1){
+					Dom.addClass(elStVal, 'up');					
 				}
-				
 			}
 		}
 	});

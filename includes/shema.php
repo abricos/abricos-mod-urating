@@ -39,7 +39,7 @@ if ($updateManager->isInstall()){
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 			`module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			
-			`skill` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Сила',
+			`skill` int(7) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)',
 			
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 			UNIQUE KEY `modcalc` (`userid`, `module`)
@@ -75,13 +75,15 @@ if ($updateManager->isUpdate('0.1.1')){
 			`elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			`elementid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
 	
+			`voteval` int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
 			`votecount` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество всего голосов',
 			`voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество ЗА',
 			`votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество ПРОТИВ',
 			
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 				
-			UNIQUE KEY `modvote` (`module`,`elementtype`,`elementid`)
+			UNIQUE KEY `modvote` (`module`,`elementtype`,`elementid`),
+			KEY `voteval` (`voteval`)
 		)".$charset
 	);
 	
@@ -103,6 +105,12 @@ if ($updateManager->isUpdate('0.1.1') && !$updateManager->isInstall()){
 		ALTER TABLE ".$pfx."urating_user
 		CHANGE  `skill`  `skill` INT(10) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)'
 	");
+	
+	$db->query_write("
+		ALTER TABLE ".$pfx."urating_user
+		CHANGE  `skill`  `skill` int(7) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)'
+	");
+	
 }
 
 ?>

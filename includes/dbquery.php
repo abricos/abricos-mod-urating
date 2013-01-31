@@ -81,11 +81,12 @@ class URatingQuery {
 		// запись результата
 		$sql = "
 			INSERT INTO ".$db->prefix."urating_votecalc
-			(module, elementtype, elementid, votecount, voteup, votedown, upddate) VALUES
+			(module, elementtype, elementid, voteval, votecount, voteup, votedown, upddate) VALUES
 			(
 				'".bkstr($modname)."',
 				'".bkstr($eltype)."',
 				".bkint($elid).",
+				".bkint(intval($row['voteup'])-intval($row['votedown'])).",
 				".bkint($row['votecount']).",
 				".bkint($row['voteup']).",
 				".bkint($row['votedown']).",
@@ -100,16 +101,33 @@ class URatingQuery {
 	}
 	
 	public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid){
+		$fld = ""; $tbl = "";
+		$userid = Abricos::$user->id;
+		if ($userid > 0){ // необходимо показать отношение к пользователю
+			$fld .= "
+				,IF(ISNULL(vt.userid), null, IF(vt.voteup>0, 1, IF(vt.votedown>0, -1, 0))) as vote
+			";
+			$tbl .= "
+				LEFT JOIN ".$db->prefix."urating_vote vt ON vt.module='".bkstr($modname)."'
+					AND vt.elementtype='".bkstr($eltype)."' 
+					AND vt.elementid=".bkint($elid)." 
+					AND vt.userid=".bkint($userid)."
+			";
+		}
+		
 		$sql = "
 			SELECT
-				votecount as cnt,
-				voteup as up,
-				votedown as down
-			FROM ".$db->prefix."urating_votecalc
-			WHERE module='".bkstr($modname)."'
-				AND elementtype='".bkstr($eltype)."'
-				AND elementid=".bkint($elid)."
-			LIMIT 1
+				vc.votecount as cnt,
+				vc.voteval as val,
+				vc.voteup as up,
+				vc.votedown as down
+				".$fld."
+			FROM ".$db->prefix."urating_votecalc vc 
+			".$tbl." 
+			WHERE vc.module='".bkstr($modname)."' 
+				AND vc.elementtype='".bkstr($eltype)."' 
+				AND vc.elementid=".bkint($elid)." 
+			LIMIT 1 
 		";
 		return $db->query_first($sql);
 	}

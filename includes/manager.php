@@ -81,7 +81,7 @@ class URatingManager extends Ab_ModuleManager {
 	 */
 	public function ElementVoting($d){
 		if (!$this->IsWriteRole()){ return null; }
-		if (!($d->vote == 'up' || $d->vote == 'down' || $d->vote == 'refrain')){
+		if (!($d->act == 'up' || $d->act == 'down' || $d->act == 'refrain')){
 			return null;
 		}
 
@@ -105,7 +105,7 @@ class URatingManager extends Ab_ModuleManager {
 		// Можно ли ставить голос текущему пользователю за этот элемент
 		// Нужно спросить сам модуль
 		$uRep = $this->UserReputation($this->userid);
-		$ret->merror = $manager->URating_IsElementVoting($uRep, $d->vote, $d->elid, $d->eltype);
+		$ret->merror = $manager->URating_IsElementVoting($uRep, $d->act, $d->elid, $d->eltype);
 		if ($ret->merror > 0){ // модуль не дал разрешение на устновку голоса
 			$ret->error = 2;
 			return $ret;
@@ -113,19 +113,19 @@ class URatingManager extends Ab_ModuleManager {
 		// голосование за элемент разрешено модулем
 		$voteup = 0;
 		$votedown = 0;
-		if ($d->vote == 'up'){
+		if ($d->act == 'up'){
 			$voteup = 1;
-		}else if ($d->vote == 'down'){
+		}else if ($d->act == 'down'){
 			$votedown = 1;
 		}
 		
 		URatingQuery::ElementVoteAppend($this->db, $d->module, 
 				$d->eltype, $d->elid, $this->userid, $voteup, $votedown);
 		
-		$ret->vote = URatingQuery::ElementVoteCalc($this->db, $d->module, $d->eltype, $d->elid);
+		$ret->info = URatingQuery::ElementVoteCalc($this->db, $d->module, $d->eltype, $d->elid);
 		
 		if (method_exists($manager, 'URating_OnElementVoting')){
-			$manager->URating_OnElementVoting($d->eltype, $d->elid, $ret->vote);
+			$manager->URating_OnElementVoting($d->eltype, $d->elid, $ret->info);
 		}
 		
 		return $ret;
@@ -272,11 +272,11 @@ class URatingManager extends Ab_ModuleManager {
 	 *
 	 *
 	 * @param URatingUserReputation $uRep
-	 * @param string $vote
+	 * @param string $act
 	 * @param integer $userid
 	 * @param string $eltype
 	 */
-	public function URating_IsElementVoting(URatingUserReputation $uRep, $vote, $userid, $eltype){
+	public function URating_IsElementVoting(URatingUserReputation $uRep, $act, $userid, $eltype){
 		if ($userid == $this->userid){ // нельзя голосовать за самого себя
 			return 1;
 		}
@@ -291,8 +291,8 @@ class URatingManager extends Ab_ModuleManager {
 		$votes = $this->UserVoteCountByDay();
 	
 		// голосов за репутацию равно кол-ву голосов самой репутации
-		$voteRepCount = $votes['urating'];
-		if ($uRep->reputation > $voteRepCount){
+		$voteRepCount = intval($votes['urating']);
+		if ($uRep->reputation <= $voteRepCount){
 			return 3;
 		}
 	
@@ -308,9 +308,9 @@ class URatingManager extends Ab_ModuleManager {
 	 * @param integer $elid
 	 * @param array $vote
 	 */
-	public function URating_OnElementVoting($eltype, $userid, $vote){
+	public function URating_OnElementVoting($eltype, $userid, $info){
 		// занести результат расчета репутации пользователя
-		URatingQuery::UserReputationUpdate($this->db, $userid, $vote['cnt'], $vote['up'], $vote['down']);
+		URatingQuery::UserReputationUpdate($this->db, $userid, $info['cnt'], $info['up'], $info['down']);
 		
 		// обнулить расчеты рейтинга для пересчета
 		$this->UserRatingClear($userid);

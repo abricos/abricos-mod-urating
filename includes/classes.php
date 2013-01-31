@@ -27,7 +27,7 @@ class URatingUserReputation {
 	 * Количество голосов
 	 * @var integer
 	 */
-	public $votecount;
+	public $voteCount;
 	
 	/**
 	 * Рейтинг
@@ -38,7 +38,7 @@ class URatingUserReputation {
 	public function __construct($userid, $d){
 		$this->id 				= $userid; 
 		$this->reputation		= intval($d['rep']);
-		$this->votecount		= intval($d['vcnt']);
+		$this->voteCount		= intval($d['vcnt']);
 		$this->skill			= intval($d['skill']);
 	}
 }
@@ -46,26 +46,37 @@ class URatingUserReputation {
 /**
  * Результат голосования по элементу модуля
  */
-class URatingElementVoteResult {
+class URatingElementVote {
 
 	/**
 	 * Количество всего голосов
 	 * @var integer
 	 */
-	public $coutVote = 0;
+	public $voteCount = 0;
 	
 	/**
 	 * Количество голосов ЗА
 	 * @var integer
 	 */
-	public $countUp = 0;
+	public $upCount = 0;
 	
 	/**
 	 * Количество голосов ПРОТИВ
 	 * @var integer
 	 */
-	public $countDown = 0;
+	public $downCount = 0;
+
+	/**
+	 * Голос текущего пользователя:
+	 * null - не голосовал,
+	 * 1 - ЗА, -1 - ПРОТИВ, 0 - воздержался
+	 * 
+	 * @var mixed
+	 */
+	public $vote = null;
 	
+	public function __construct($d){
+	}
 }
 
 ?>
