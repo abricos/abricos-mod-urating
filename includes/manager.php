@@ -66,6 +66,19 @@ class URatingManager extends Ab_ModuleManager {
 		}
 		return $ret;
 	}
+
+	public function ParamToObject($o){
+		if (is_array($o)){
+			$ret = new stdClass();
+			foreach($o as $key => $value){
+				$ret->$key = $value;
+			}
+			return $ret;
+		}else if (!is_object($o)){
+			return new stdClass();
+		}
+		return $o;
+	}
 	
 	/**
 	 * Обработать голос пользователя за элемент модуля
@@ -333,7 +346,27 @@ class URatingManager extends Ab_ModuleManager {
 		$ret->skill = $rep->reputation * 10;
 		return $ret;
 	}
+
+	public function VoteBrick($cfg){
+		$cfg = $this->ParamToObject($cfg);
 		
+		// if (empty($cfg->value)){ $cfg->value = null; }
+		// if (empty($cfg->vote)){ $cfg->vote = null; }
+		
+		$brick = Brick::$builder->LoadBrickS('urating', 'vote', null, null);
+		$v = &$brick->param->var;
+		
+		return Brick::ReplaceVarByData($brick->content, array(
+			'bup' => $v['bup'],
+			'bval' => Brick::ReplaceVarByData($v['bval'], array(
+				"val" => is_null($cfg->value) ? "—" : $cfg->value
+			)),
+			'bdown' => $v['bdown']
+		)); 
+		
+		
+	}
+	
 }
 
 ?>
