@@ -133,4 +133,25 @@ Component.entryPoint = function(NS){
 	});
 	NS.VotingWidget = VotingWidget;
 	
+	NS.API.WidgetListByServ = function(cfg){
+		
+		
+		var list = cfg['list'];
+		if (!L.isArray(list)){ return; }
+		for (var i=0;i<list.length;i++){
+			
+			var v = list[i];
+			var el = Dom.get(v['jsid']);
+			if (L.isNull(el)){ continue; }
+			
+			new VotingWidget(el, {
+				'modname': cfg['modname'],
+				'elementType': cfg['eltype'],
+				'elementId': v['id'],
+				'value': v['vl'],
+				'vote': v['vt']
+			});
+		}
+	};
+	
 };

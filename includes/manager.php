@@ -346,27 +346,97 @@ class URatingManager extends Ab_ModuleManager {
 		$ret->skill = $rep->reputation * 10;
 		return $ret;
 	}
+	
+	private $_idCounter = 1;
+	public function GenId(){
+		return "vote".($this->_idCounter++).'-';
+	}
+}
 
-	public function VoteBrick($cfg){
-		$cfg = $this->ParamToObject($cfg);
+class URatingBuilder {
+	
+	public $idPrefix = "";
+	
+	public $modName;
+	public $elType;
+	
+	private $_list = array();
+	
+	public function __construct($modName, $elType){
 		
-		// if (empty($cfg->value)){ $cfg->value = null; }
-		// if (empty($cfg->vote)){ $cfg->vote = null; }
+		$this->idPrefix = URatingManager::$instance->GenId();
 		
+		$this->modName = $modName;
+		$this->elType = $elType;
+	}
+	
+	public function BuildVote($cfg){
+		
+		$man = URatingManager::$instance;
+		
+		$cfg = $man->ParamToObject($cfg);
+		
+		$vote = new URatingVote($cfg->elid, $cfg->value, $cfg->vote);
+		$vote->jsid = $this->idPrefix.$cfg->elid;
+		
+		array_push($this->_list, $vote);
+
 		$brick = Brick::$builder->LoadBrickS('urating', 'vote', null, null);
 		$v = &$brick->param->var;
 		
-		return Brick::ReplaceVarByData($brick->content, array(
+		$s = Brick::ReplaceVarByData($brick->content, array(
 			'bup' => $v['bup'],
 			'bval' => Brick::ReplaceVarByData($v['bval'], array(
 				"val" => is_null($cfg->value) ? "—" : $cfg->value
 			)),
-			'bdown' => $v['bdown']
-		)); 
+			'bdown' => $v['bdown'],
+			'jsid' => $vote->jsid
+		));
 		
-		
+		return $s;
 	}
 	
+	public function BuildJSMan(){
+		$brick = Brick::$builder->LoadBrickS('urating', 'jsman', null, null);
+		$v = &$brick->param->var;
+		
+		$arr = array();
+		foreach ($this->_list as $vote){
+			array_push($arr, $vote->ToAJAX());
+		}
+		
+		$s = Brick::ReplaceVarByData($brick->content, array(
+			"modname" => $this->modName,
+			"eltype" => $this->elType,
+			"list" => json_encode($arr)
+		));
+		
+		return $s;
+	}
+}
+
+class URatingVote {
+	
+	public $elid;
+	public $value;
+	public $vote;
+	
+	public $jsid = '';
+	
+	public function __construct($elid, $value, $vote){
+		$this->elid = $elid;
+		$this->value = $value;
+		$this->vote = $vote;
+	}
+	
+	public function ToAJAX(){
+		$ret = new stdClass();
+		$ret->id = $this->elid;
+		$ret->vl = $this->value;
+		$ret->vt = $this->vote;
+		$ret->jsid = $this->jsid;
+		return $ret;
+	}
 }
 
 ?>
