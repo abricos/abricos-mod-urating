@@ -6,7 +6,7 @@
 var Component = new Brick.Component();
 Component.requires = {
 	mod:[
-        {name: 'widget', files: ['lib.js']}
+        {name: 'widget', files: ['notice.js']}
 	]
 };
 Component.entryPoint = function(NS){

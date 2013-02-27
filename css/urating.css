@@ -48,3 +48,6 @@
 .aw-urating .voting .down .bdown {
 	background-position: -70px 0px;
 }
+.aw-urating .voting .bval {
+	line-height: 14px;
+} 
