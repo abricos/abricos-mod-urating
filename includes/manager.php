@@ -408,7 +408,8 @@ class URatingBuilder {
 		$s = Brick::ReplaceVarByData($brick->content, array(
 			"modname" => $this->modName,
 			"eltype" => $this->elType,
-			"list" => json_encode($arr)
+			"list" => json_encode($arr),
+			"errorlang" => $brick->param->param['errorlang']
 		));
 		
 		return $s;

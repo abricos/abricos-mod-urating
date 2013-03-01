@@ -16,7 +16,8 @@ Component.entryPoint = function(NS){
 	
 	var UID = Brick.env.user.id;
 	
-	var buildTemplate = this.buildTemplate;
+	var buildTemplate = this.buildTemplate,
+		LNG = this.language;
 	
 	var VotingWidget = function(container, cfg){
 		cfg = L.merge({
@@ -27,7 +28,8 @@ Component.entryPoint = function(NS){
 			'vote': null,
 			'readOnly': false,
 			'hideButtons': false,
-			'onVotingError': null
+			'onVotingError': null,
+			'errorlang': null
 		}, cfg || {});
 		VotingWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'widget' 
@@ -89,6 +91,18 @@ Component.entryPoint = function(NS){
 			if (d['error'] != 0){
 				if (L.isFunction(cfg['onVotingError'])){
 					cfg['onVotingError'](d['error'], d['merror']);
+				}else if (L.isString(cfg['errorlang'])){
+					
+					var s = 'ERROR';
+					
+					if (d['merror'] > 0){
+						s = LNG.get('topic.vote.error.m.'+d['merror'], cfg['modname']);
+					}else if (d['error'] == 1){
+						s = LNG.get('topic.vote.error.'+d['error'], cfg['modname']);
+					}else{
+						return;
+					}
+					Brick.mod.widget.notice.show(s);		
 				}
 				return; 
 			}
@@ -135,7 +149,6 @@ Component.entryPoint = function(NS){
 	
 	NS.API.WidgetListByServ = function(cfg){
 		
-		
 		var list = cfg['list'];
 		if (!L.isArray(list)){ return; }
 		for (var i=0;i<list.length;i++){
@@ -144,12 +157,15 @@ Component.entryPoint = function(NS){
 			var el = Dom.get(v['jsid']);
 			if (L.isNull(el)){ continue; }
 			
-			new VotingWidget(el, {
-				'modname': cfg['modname'],
-				'elementType': cfg['eltype'],
-				'elementId': v['id'],
-				'value': v['vl'],
-				'vote': v['vt']
+			Brick.f(cfg['modname'], 'lib', function(){ // подгрузить компонет lib для фраз ошибок
+				new VotingWidget(el, {
+					'modname': cfg['modname'],
+					'elementType': cfg['eltype'],
+					'elementId': v['id'],
+					'value': v['vl'],
+					'vote': v['vt'],
+					'errorlang': cfg['errorlang']
+				});
 			});
 		}
 	};
