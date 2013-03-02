@@ -359,15 +359,17 @@ class URatingBuilder {
 	
 	public $modName;
 	public $elType;
+	public $errorLang = '';
 	
 	private $_list = array();
 	
-	public function __construct($modName, $elType){
+	public function __construct($modName, $elType, $errorLang = ''){
 		
 		$this->idPrefix = URatingManager::$instance->GenId();
 		
-		$this->modName = $modName;
-		$this->elType = $elType;
+		$this->modName		= $modName;
+		$this->elType		= $elType;
+		$this->errorLang	= $errorLang;
 	}
 	
 	public function BuildVote($cfg){
@@ -397,6 +399,7 @@ class URatingBuilder {
 	}
 	
 	public function BuildJSMan(){
+		
 		$brick = Brick::$builder->LoadBrickS('urating', 'jsman', null, null);
 		$v = &$brick->param->var;
 		
@@ -409,7 +412,7 @@ class URatingBuilder {
 			"modname" => $this->modName,
 			"eltype" => $this->elType,
 			"list" => json_encode($arr),
-			"errorlang" => $brick->param->param['errorlang']
+			"errorlang" => $this->errorLang
 		));
 		
 		return $s;

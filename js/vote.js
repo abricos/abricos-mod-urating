@@ -96,13 +96,13 @@ Component.entryPoint = function(NS){
 					var s = 'ERROR';
 					
 					if (d['merror'] > 0){
-						s = LNG.get('topic.vote.error.m.'+d['merror'], cfg['modname']);
-					}else if (d['error'] == 1){
-						s = LNG.get('topic.vote.error.'+d['error'], cfg['modname']);
+						s = LNG.get(cfg['errorlang']+'.m.'+d['merror'], cfg['modname']);
+					}else if (d['error'] > 0){
+						s = LNG.get(cfg['errorlang']+'.'+d['merror'], cfg['modname']);
 					}else{
 						return;
 					}
-					Brick.mod.widget.notice.show(s);		
+					Brick.mod.widget.notice.show(s);
 				}
 				return; 
 			}
@@ -151,13 +151,14 @@ Component.entryPoint = function(NS){
 		
 		var list = cfg['list'];
 		if (!L.isArray(list)){ return; }
-		for (var i=0;i<list.length;i++){
-			
-			var v = list[i];
-			var el = Dom.get(v['jsid']);
-			if (L.isNull(el)){ continue; }
-			
-			Brick.f(cfg['modname'], 'lib', function(){ // подгрузить компонет lib для фраз ошибок
+		
+		Brick.ff(cfg['modname'], 'lib', function(){ // подгрузить компонет lib для фраз ошибок
+			for (var i=0;i<list.length;i++){
+				
+				var v = list[i];
+				var el = Dom.get(v['jsid']);
+				if (L.isNull(el)){ continue; }
+	
 				new VotingWidget(el, {
 					'modname': cfg['modname'],
 					'elementType': cfg['eltype'],
@@ -166,8 +167,9 @@ Component.entryPoint = function(NS){
 					'vote': v['vt'],
 					'errorlang': cfg['errorlang']
 				});
-			});
-		}
+			}
+		});
+		
 	};
 	
 };
