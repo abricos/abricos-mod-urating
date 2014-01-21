@@ -22,7 +22,7 @@ class URatingModule extends Ab_Module {
 	public static $instance = null;
 	
 	public function __construct(){
-		$this->version = "0.1.1";
+		$this->version = "0.1.2-dev";
 		$this->name = "urating";
 		$this->permission = new URatingPermission($this);
 		
