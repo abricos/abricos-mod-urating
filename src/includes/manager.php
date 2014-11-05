@@ -200,8 +200,7 @@ class URatingManager extends Ab_ModuleManager {
 		}
 		
 		// зарегистрировать все модули
-		Abricos::$modules->RegisterAllModule();
-		$modules = Abricos::$modules->GetModules();
+		$modules = Abricos::$modules->RegisterAllModule();
 		
 		// опросить каждый модуль на наличие метода запроса SQL по форме
 		$sqls = array();
