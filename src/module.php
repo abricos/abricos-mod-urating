@@ -10,6 +10,8 @@
  * Модуль расчета пользовательского рейтинга
  */
 class URatingModule extends Ab_Module {
+
+    private $_manager = null;
 	
 	/**
 	 * Период пересчета в секундах, по умолчанию 5 минут
