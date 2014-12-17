@@ -7,15 +7,15 @@
  */
 
 $charset = "CHARACTER SET 'utf8' COLLATE 'utf8_general_ci'";
-$updateManager = Ab_UpdateManager::$current; 
+$updateManager = Ab_UpdateManager::$current;
 $db = Abricos::$db;
 $pfx = $db->prefix;
 
-if ($updateManager->isInstall()){
-	Abricos::GetModule('urating')->permission->Install();
-	
-	// таблица результатов рассчета
-	$db->query_write("
+if ($updateManager->isInstall()) {
+    Abricos::GetModule('urating')->permission->Install();
+
+    // таблица результатов рассчета
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_user (
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 			
@@ -32,9 +32,9 @@ if ($updateManager->isInstall()){
 			KEY (`reputation`),
 			KEY (`skill`)
 		)".$charset
-	);
-	
-	$db->query_write("
+    );
+
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_modcalc (
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 			`module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
@@ -44,13 +44,13 @@ if ($updateManager->isInstall()){
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 			UNIQUE KEY `modcalc` (`userid`, `module`)
 		)".$charset
-	);
+    );
 }
 
-if ($updateManager->isUpdate('0.1.1')){
-	
-	// голосование за определенный элемент модуля
-	$db->query_write("
+if ($updateManager->isUpdate('0.1.1')) {
+
+    // голосование за определенный элемент модуля
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_vote (
 			`module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			`elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
@@ -66,10 +66,10 @@ if ($updateManager->isUpdate('0.1.1')){
 			KEY `userid` (`userid`),
 			KEY `element` (`module`,`elementtype`,`elementid`)
 		)".$charset
-	);
-	
-	// результат голосований
-	$db->query_write("
+    );
+
+    // результат голосований
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_votecalc (
 			`module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			`elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
@@ -85,12 +85,12 @@ if ($updateManager->isUpdate('0.1.1')){
 			UNIQUE KEY `modvote` (`module`,`elementtype`,`elementid`),
 			KEY `voteval` (`voteval`)
 		)".$charset
-	);
-	
+    );
+
 }
 
-if ($updateManager->isUpdate('0.1.1') && !$updateManager->isInstall()){
-	$db->query_write("
+if ($updateManager->isUpdate('0.1.1') && !$updateManager->isInstall()) {
+    $db->query_write("
 		ALTER TABLE ".$pfx."urating_user
 			ADD `reputation` int(10) NOT NULL DEFAULT 0 COMMENT 'Репутация пользователя',
 			ADD `voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ЗА пользователя',
@@ -101,16 +101,16 @@ if ($updateManager->isUpdate('0.1.1') && !$updateManager->isInstall()){
 			ADD KEY (`skill`)
 	");
 
-	$db->query_write("
+    $db->query_write("
 		ALTER TABLE ".$pfx."urating_user
 		CHANGE  `skill`  `skill` INT(10) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)'
 	");
-	
-	$db->query_write("
+
+    $db->query_write("
 		ALTER TABLE ".$pfx."urating_user
 		CHANGE  `skill`  `skill` int(7) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)'
 	");
-	
+
 }
 
 ?>

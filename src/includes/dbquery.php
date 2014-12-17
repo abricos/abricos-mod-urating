@@ -1,22 +1,23 @@
 <?php
+
 /**
  * @package Abricos
  * @subpackage URating
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
-
 class URatingQuery {
-	
-	/**
-	 * Количество используемых голосов за прошедшие сутки
-	 * @param Ab_Database $db
-	 * @param unknown_type $userid
-	 */
-	public function ElementVoteCountDayByUser(Ab_Database $db, $userid){
-		$day = 60*60*24;
-		$t1 = intval(round(TIMENOW/$day)*$day);
-		$sql = "
+
+    /**
+     * Количество используемых голосов за прошедшие сутки
+     *
+     * @param Ab_Database $db
+     * @param unknown_type $userid
+     */
+    public function ElementVoteCountDayByUser(Ab_Database $db, $userid) {
+        $day = 60 * 60 * 24;
+        $t1 = intval(round(TIMENOW / $day) * $day);
+        $sql = "
 			SELECT
 				module as id,
 				count(*) as cnt
@@ -24,11 +25,11 @@ class URatingQuery {
 			WHERE userid=".bkint($userid)." AND dateline>".$t1."
 			GROUP BY module
 		";
-		return $db->query_first($sql);
-	}
-	
-	public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid){
-		$sql = "
+        return $db->query_first($sql);
+    }
+
+    public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid) {
+        $sql = "
 			SELECT 
 				module as m,
 				elementtype as tp,
@@ -44,12 +45,12 @@ class URatingQuery {
 				AND userid=".bkint($userid)."
 			LIMIT 1
 		";
-		return $db->query_first($sql);
-	}
-	
-	public static function ElementVoteAppend(Ab_Database $db, $modname, $eltype, $elid, $userid, $voteup, $votedown){
-		// добавление голоса
-		$sql = "
+        return $db->query_first($sql);
+    }
+
+    public static function ElementVoteAppend(Ab_Database $db, $modname, $eltype, $elid, $userid, $voteup, $votedown) {
+        // добавление голоса
+        $sql = "
 			INSERT IGNORE INTO ".$db->prefix."urating_vote
 			(module, elementtype, elementid, userid, voteup, votedown, dateline) VALUES
 			(
@@ -62,10 +63,10 @@ class URatingQuery {
 				".TIMENOW."
 			 )
 		";
-		$db->query_write($sql);
-		
-		// подсчет итога
-		$sql = "
+        $db->query_write($sql);
+
+        // подсчет итога
+        $sql = "
 			SELECT
 				count(*) as votecount, 
 				sum(voteup) as voteup,
@@ -76,17 +77,17 @@ class URatingQuery {
 				AND elementid=".bkint($elid)."
 			GROUP BY module, elementtype, elementid
 		";
-		$row = $db->query_first($sql);
-		
-		// запись результата
-		$sql = "
+        $row = $db->query_first($sql);
+
+        // запись результата
+        $sql = "
 			INSERT INTO ".$db->prefix."urating_votecalc
 			(module, elementtype, elementid, voteval, votecount, voteup, votedown, upddate) VALUES
 			(
 				'".bkstr($modname)."',
 				'".bkstr($eltype)."',
 				".bkint($elid).",
-				".bkint(intval($row['voteup'])-intval($row['votedown'])).",
+				".bkint(intval($row['voteup']) - intval($row['votedown'])).",
 				".bkint($row['votecount']).",
 				".bkint($row['voteup']).",
 				".bkint($row['votedown']).",
@@ -97,25 +98,26 @@ class URatingQuery {
 				votedown=".bkint($row['votedown']).",
 				upddate=".TIMENOW."
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid){
-		$fld = ""; $tbl = "";
-		$userid = Abricos::$user->id;
-		if ($userid > 0){ // необходимо показать отношение к пользователю
-			$fld .= "
+        $db->query_write($sql);
+    }
+
+    public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid) {
+        $fld = "";
+        $tbl = "";
+        $userid = Abricos::$user->id;
+        if ($userid > 0) { // необходимо показать отношение к пользователю
+            $fld .= "
 				,IF(ISNULL(vt.userid), null, IF(vt.voteup>0, 1, IF(vt.votedown>0, -1, 0))) as vote
 			";
-			$tbl .= "
+            $tbl .= "
 				LEFT JOIN ".$db->prefix."urating_vote vt ON vt.module='".bkstr($modname)."'
 					AND vt.elementtype='".bkstr($eltype)."' 
 					AND vt.elementid=".bkint($elid)." 
 					AND vt.userid=".bkint($userid)."
 			";
-		}
-		
-		$sql = "
+        }
+
+        $sql = "
 			SELECT
 				vc.votecount as cnt,
 				vc.voteval as val,
@@ -129,11 +131,11 @@ class URatingQuery {
 				AND vc.elementid=".bkint($elid)." 
 			LIMIT 1 
 		";
-		return $db->query_first($sql);
-	}
-	
-	public static function UserReputation(Ab_Database $db, $userid){
-		$sql = "
+        return $db->query_first($sql);
+    }
+
+    public static function UserReputation(Ab_Database $db, $userid) {
+        $sql = "
 			SELECT
 				userid as id,
 				reputation as rep,
@@ -143,31 +145,31 @@ class URatingQuery {
 			WHERE userid=".bkint($userid)."
 			LIMIT 1
 		";
-		return $db->query_first($sql);
-	}
-	
-	public static function UserReputationUpdate(Ab_Database $db, $userid, $votecount, $voteup, $votedown){
-		$sql = "
+        return $db->query_first($sql);
+    }
+
+    public static function UserReputationUpdate(Ab_Database $db, $userid, $votecount, $voteup, $votedown) {
+        $sql = "
 			INSERT INTO ".$db->prefix."urating_user
 				(userid, reputation, votecount, voteup, votedown, votedate) VALUES (
 				".bkint($userid).",
-				".bkint($voteup-$votedown).",
+				".bkint($voteup - $votedown).",
 				".bkint($votecount).",
 				".bkint($voteup).",
 				".bkint($votedown).",
 				".TIMENOW."
 			) ON DUPLICATE KEY UPDATE
-				reputation=".bkint($voteup-$votedown).",
+				reputation=".bkint($voteup - $votedown).",
 				votecount=".bkint($votecount).",
 				voteup=".bkint($voteup).",
 				votedown=".bkint($votedown).",
 				votedate=".TIMENOW."
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function CalculateUserList(Ab_Database $db, $sqls){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function CalculateUserList(Ab_Database $db, $sqls) {
+        $sql = "
 			SELECT 
 				DISTINCT uu.uid, uu.m
 			FROM (
@@ -175,11 +177,11 @@ class URatingQuery {
 			) uu
 			ORDER BY uu.uid
 		";
-		return $db->query_read($sql);
-	}
-	
-	public static function UserRatingModuleUpdate(Ab_Database $db, $userid, $module, $skill){
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    public static function UserRatingModuleUpdate(Ab_Database $db, $userid, $module, $skill) {
+        $sql = "
 			INSERT INTO ".$db->prefix."urating_modcalc
 			(userid, module, skill, upddate) VALUES (
 				".bkint($userid).",
@@ -190,21 +192,21 @@ class URatingQuery {
 				skill=".bkint($skill).",
 				upddate=".TIMENOW."
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function UserRatingCalculateList(Ab_Database $db, $userid){
-		if (!is_array($userid)){
-			$userid = array($userid);
-		}
-		if (count($userid) == 0){ 
-			return null; 
-		}
-		$awh = array();
-		foreach ($userid as $id){
-			array_push($awh, "userid=".bkint($id));
-		}
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function UserRatingCalculateList(Ab_Database $db, $userid) {
+        if (!is_array($userid)) {
+            $userid = array($userid);
+        }
+        if (count($userid) == 0) {
+            return null;
+        }
+        $awh = array();
+        foreach ($userid as $id) {
+            array_push($awh, "userid=".bkint($id));
+        }
+        $sql = "
 			SELECT 
 				userid as id,
 				sum(skill) as skill
@@ -212,11 +214,11 @@ class URatingQuery {
 			WHERE ".implode(" OR ", $awh)."
 			GROUP BY userid
 		";
-		return $db->query_read($sql);
-	}
-	
-	public static function UserRatingUpdate(Ab_Database $db, $userid, $skill){
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    public static function UserRatingUpdate(Ab_Database $db, $userid, $skill) {
+        $sql = "
 			INSERT INTO ".$db->prefix."urating_user
 				(userid, skill, upddate) VALUES (
 				".bkint($userid).",
@@ -226,26 +228,28 @@ class URatingQuery {
 				skill=".bkint($skill).",
 				upddate=".TIMENOW."
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function UserRatingClear(Ab_Database $db, $userid){
-		if (!is_array($userid)){
-			$userid = array($userid);
-		}
-		if (count($userid) == 0){ return null; }
-		$awh = array();
-		foreach ($userid as $id){
-			array_push($awh, "userid=".bkint($id));
-		}
-		
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function UserRatingClear(Ab_Database $db, $userid) {
+        if (!is_array($userid)) {
+            $userid = array($userid);
+        }
+        if (count($userid) == 0) {
+            return null;
+        }
+        $awh = array();
+        foreach ($userid as $id) {
+            array_push($awh, "userid=".bkint($id));
+        }
+
+        $sql = "
 			DELETE FROM ".$db->prefix."urating_modcalc
 			WHERE ".implode(" OR ", $awh)."
 		";
-		$db->query_write($sql);
-	}
-	
+        $db->query_write($sql);
+    }
+
 }
 
 ?>
