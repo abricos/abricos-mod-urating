@@ -85,5 +85,3 @@ class URatingElementVote {
     public function __construct($d) {
     }
 }
-
-?>

@@ -23,7 +23,7 @@ class URatingModule extends Ab_Module {
      */
     public static $instance = null;
 
-    public function __construct() {
+    public function __construct(){
         $this->version = "0.1.2";
         $this->name = "urating";
         $this->permission = new URatingPermission($this);
@@ -36,8 +36,8 @@ class URatingModule extends Ab_Module {
      *
      * @return URatingManager
      */
-    public function GetManager() {
-        if (is_null($this->_manager)) {
+    public function GetManager(){
+        if (is_null($this->_manager)){
             require_once 'includes/manager.php';
             $this->_manager = new URatingManager($this);
         }
@@ -51,7 +51,7 @@ class URatingModule extends Ab_Module {
      * В расчете участвуют только те пользователи, которым поставили
      * хотябы один голос за репутацию
      */
-    public function URating_SQLCheckCalculate() {
+    public function URating_SQLCheckCalculate(){
         $db = Abricos::$db;
         return "
 			SELECT
@@ -81,7 +81,7 @@ class URatingAction {
 
 class URatingPermission extends Ab_UserPermission {
 
-    public function URatingPermission(URatingModule $module) {
+    public function __construct(URatingModule $module){
 
         $defRoles = array(
             new Ab_UserRole(URatingAction::VIEW, Ab_UserGroup::GUEST),
@@ -96,7 +96,7 @@ class URatingPermission extends Ab_UserPermission {
         parent::__construct($module, $defRoles);
     }
 
-    public function GetRoles() {
+    public function GetRoles(){
         return array(
             URatingAction::VIEW => $this->CheckAction(URatingAction::VIEW),
             URatingAction::WRITE => $this->CheckAction(URatingAction::WRITE),
@@ -106,5 +106,3 @@ class URatingPermission extends Ab_UserPermission {
 }
 
 Abricos::ModuleRegister(new URatingModule());
-
-?>
