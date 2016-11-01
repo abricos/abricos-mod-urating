@@ -1,20 +1,24 @@
 <?php
-
 /**
  * @package Abricos
  * @subpackage URating
- * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+ * @copyright 2008-2016 Alexander Kuzmin
+ * @license http://opensource.org/licenses/mit-license.php MIT License
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
-class URatingQuery {
 
+
+/**
+ * Class URatingQuery
+ */
+class URatingQuery {
     /**
      * Количество используемых голосов за прошедшие сутки
      *
      * @param Ab_Database $db
      * @param unknown_type $userid
      */
-    public function ElementVoteCountDayByUser(Ab_Database $db, $userid) {
+    public function ElementVoteCountDayByUser(Ab_Database $db, $userid){
         $day = 60 * 60 * 24;
         $t1 = intval(round(TIMENOW / $day) * $day);
         $sql = "
@@ -28,7 +32,7 @@ class URatingQuery {
         return $db->query_first($sql);
     }
 
-    public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid) {
+    public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid){
         $sql = "
 			SELECT 
 				module as m,
@@ -48,7 +52,7 @@ class URatingQuery {
         return $db->query_first($sql);
     }
 
-    public static function ElementVoteAppend(Ab_Database $db, $modname, $eltype, $elid, $userid, $voteup, $votedown) {
+    public static function ElementVoteAppend(Ab_Database $db, $modname, $eltype, $elid, $userid, $voteup, $votedown){
         // добавление голоса
         $sql = "
 			INSERT IGNORE INTO ".$db->prefix."urating_vote
@@ -101,11 +105,11 @@ class URatingQuery {
         $db->query_write($sql);
     }
 
-    public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid) {
+    public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid){
         $fld = "";
         $tbl = "";
         $userid = Abricos::$user->id;
-        if ($userid > 0) { // необходимо показать отношение к пользователю
+        if ($userid > 0){ // необходимо показать отношение к пользователю
             $fld .= "
 				,IF(ISNULL(vt.userid), null, IF(vt.voteup>0, 1, IF(vt.votedown>0, -1, 0))) as vote
 			";
@@ -134,7 +138,7 @@ class URatingQuery {
         return $db->query_first($sql);
     }
 
-    public static function UserReputation(Ab_Database $db, $userid) {
+    public static function UserReputation(Ab_Database $db, $userid){
         $sql = "
 			SELECT
 				userid as id,
@@ -148,7 +152,7 @@ class URatingQuery {
         return $db->query_first($sql);
     }
 
-    public static function UserReputationUpdate(Ab_Database $db, $userid, $votecount, $voteup, $votedown) {
+    public static function UserReputationUpdate(Ab_Database $db, $userid, $votecount, $voteup, $votedown){
         $sql = "
 			INSERT INTO ".$db->prefix."urating_user
 				(userid, reputation, votecount, voteup, votedown, votedate) VALUES (
@@ -168,7 +172,7 @@ class URatingQuery {
         $db->query_write($sql);
     }
 
-    public static function CalculateUserList(Ab_Database $db, $sqls) {
+    public static function CalculateUserList(Ab_Database $db, $sqls){
         $sql = "
 			SELECT 
 				DISTINCT uu.uid, uu.m
@@ -180,7 +184,7 @@ class URatingQuery {
         return $db->query_read($sql);
     }
 
-    public static function UserRatingModuleUpdate(Ab_Database $db, $userid, $module, $skill) {
+    public static function UserRatingModuleUpdate(Ab_Database $db, $userid, $module, $skill){
         $sql = "
 			INSERT INTO ".$db->prefix."urating_modcalc
 			(userid, module, skill, upddate) VALUES (
@@ -195,15 +199,15 @@ class URatingQuery {
         $db->query_write($sql);
     }
 
-    public static function UserRatingCalculateList(Ab_Database $db, $userid) {
-        if (!is_array($userid)) {
+    public static function UserRatingCalculateList(Ab_Database $db, $userid){
+        if (!is_array($userid)){
             $userid = array($userid);
         }
-        if (count($userid) == 0) {
+        if (count($userid) == 0){
             return null;
         }
         $awh = array();
-        foreach ($userid as $id) {
+        foreach ($userid as $id){
             array_push($awh, "userid=".bkint($id));
         }
         $sql = "
@@ -217,7 +221,7 @@ class URatingQuery {
         return $db->query_read($sql);
     }
 
-    public static function UserRatingUpdate(Ab_Database $db, $userid, $skill) {
+    public static function UserRatingUpdate(Ab_Database $db, $userid, $skill){
         $sql = "
 			INSERT INTO ".$db->prefix."urating_user
 				(userid, skill, upddate) VALUES (
@@ -231,15 +235,15 @@ class URatingQuery {
         $db->query_write($sql);
     }
 
-    public static function UserRatingClear(Ab_Database $db, $userid) {
-        if (!is_array($userid)) {
+    public static function UserRatingClear(Ab_Database $db, $userid){
+        if (!is_array($userid)){
             $userid = array($userid);
         }
-        if (count($userid) == 0) {
+        if (count($userid) == 0){
             return null;
         }
         $awh = array();
-        foreach ($userid as $id) {
+        foreach ($userid as $id){
             array_push($awh, "userid=".bkint($id));
         }
 
@@ -249,5 +253,4 @@ class URatingQuery {
 		";
         $db->query_write($sql);
     }
-
 }

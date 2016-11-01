@@ -1,0 +1,68 @@
+.aw-urating .voting {
+  position: relative;
+  padding: 0 20px;
+
+  .bup,
+  .bdown {
+    position: absolute;
+    width: 9px;
+    height: 14px;
+  }
+
+  .bup,
+  .bdown {
+    top: 1px;
+    background: url(/modules/urating/images/icons.png?v=1) no-repeat;
+  }
+
+  .bup {
+    left: 0;
+  }
+
+  .bdown {
+    right: 0;
+  }
+
+  .w .bup,
+  .w .bdown {
+    cursor: pointer;
+  }
+
+  .w .bup,
+  .ro .bup {
+    background-position: 0px 0px;
+  }
+
+  .w .bdown,
+  .ro .bdown {
+    background-position: -10px 0px;
+  }
+
+  .w .bup:HOVER {
+    background-position: -40px 0px;
+  }
+
+  .w .bdown:HOVER {
+    background-position: -70px 0px;
+  }
+
+  .ro .bup {
+    background-position: -80px 0px;
+  }
+
+  .ro .bdown {
+    background-position: -90px 0px;
+  }
+
+  .up .bup {
+    background-position: -40px 0px;
+  }
+
+  .down .bdown {
+    background-position: -70px 0px;
+  }
+
+  .bval {
+    line-height: 14px;
+  }
+}

@@ -2,46 +2,31 @@
 /**
  * @package Abricos
  * @subpackage URating
- * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+ * @copyright 2008-2016 Alexander Kuzmin
+ * @license http://opensource.org/licenses/mit-license.php MIT License
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
 /**
  * Модуль расчета пользовательского рейтинга
+ *
+ * @method URatingManager GetManager()
  */
 class URatingModule extends Ab_Module {
-
-    private $_manager = null;
 
     /**
      * Период пересчета в секундах, по умолчанию 5 минут
      */
     const PERIOD_CHECK = 300;
 
-    /**
-     * @var URatingModule
-     */
-    public static $instance = null;
-
     public function __construct(){
         $this->version = "0.1.2";
         $this->name = "urating";
         $this->permission = new URatingPermission($this);
-
-        URatingModule::$instance = $this;
     }
 
-    /**
-     * Получить менеджер
-     *
-     * @return URatingManager
-     */
-    public function GetManager(){
-        if (is_null($this->_manager)){
-            require_once 'includes/manager.php';
-            $this->_manager = new URatingManager($this);
-        }
-        return $this->_manager;
+    public function GetManagerClassName(){
+        return 'URatingManager';
     }
 
     /**
@@ -71,11 +56,8 @@ class URatingModule extends Ab_Module {
 
 
 class URatingAction {
-
     const VIEW = 10;
-
     const WRITE = 30;
-
     const ADMIN = 50;
 }
 

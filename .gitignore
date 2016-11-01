@@ -1,7 +1,3 @@
-/.cache
-/.settings
-/.project
-/.buildpath
 /build
 /build_temp
 /release
