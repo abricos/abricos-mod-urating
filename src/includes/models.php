@@ -8,111 +8,8 @@
  */
 
 /**
- * Репутация пользователя
+ * Class URatingBuilder
  */
-class URatingUserReputation {
-
-    /**
-     * Пользователь
-     *
-     * @var integer
-     */
-    public $userid;
-
-    /**
-     * Репутация
-     *
-     * @var integer
-     */
-    public $reputation;
-
-    /**
-     * Количество голосов
-     *
-     * @var integer
-     */
-    public $voteCount;
-
-    /**
-     * Рейтинг
-     *
-     * @var integer
-     */
-    public $skill;
-
-    public function __construct($userid, $d){
-        $this->id = $userid;
-        $this->reputation = intval($d['rep']);
-        $this->voteCount = intval($d['vcnt']);
-        $this->skill = intval($d['skill']);
-    }
-}
-
-/**
- * Результат голосования по элементу модуля
- */
-class URatingElementVote {
-
-    /**
-     * Количество всего голосов
-     *
-     * @var integer
-     */
-    public $voteCount = 0;
-
-    /**
-     * Количество голосов ЗА
-     *
-     * @var integer
-     */
-    public $upCount = 0;
-
-    /**
-     * Количество голосов ПРОТИВ
-     *
-     * @var integer
-     */
-    public $downCount = 0;
-
-    /**
-     * Голос текущего пользователя:
-     * null - не голосовал,
-     * 1 - ЗА, -1 - ПРОТИВ, 0 - воздержался
-     *
-     * @var mixed
-     */
-    public $vote = null;
-
-    public function __construct($d){
-    }
-}
-
-
-class URatingVote {
-
-    public $elid;
-    public $value;
-    public $vote;
-
-    public $jsid = '';
-
-    public function __construct($elid, $value, $vote){
-        $this->elid = $elid;
-        $this->value = $value;
-        $this->vote = $vote;
-    }
-
-    public function ToAJAX(){
-        $ret = new stdClass();
-        $ret->id = $this->elid;
-        $ret->vl = $this->value;
-        $ret->vt = $this->vote;
-        $ret->jsid = $this->jsid;
-        return $ret;
-    }
-}
-
-
 class URatingBuilder {
 
     public $idPrefix = "";
@@ -154,29 +51,170 @@ class URatingBuilder {
                 "val" => is_null($cfg->value) ? "—" : $cfg->value
             )),
             'bdown' => $v['bdown'],
-            'jsid' => $vote->jsid
+            'module' => $this->modName,
+            'type' => $this->elType,
+            'nodeid' => $vote->jsid,
+            'id' => $cfg->elid,
+            'value' => $cfg->value,
+            'vote' => $cfg->vote
         ));
 
         return $s;
     }
 
     public function BuildJSMan(){
-
-        $brick = Brick::$builder->LoadBrickS('urating', 'jsman', null, null);
-        $v = &$brick->param->var;
-
-        $arr = array();
-        foreach ($this->_list as $vote){
-            array_push($arr, $vote->ToAJAX());
-        }
-
-        $s = Brick::ReplaceVarByData($brick->content, array(
-            "modname" => $this->modName,
-            "eltype" => $this->elType,
-            "list" => json_encode($arr),
-            "errorlang" => $this->errorLang
-        ));
-
-        return $s;
+        return "";
     }
+}
+
+/**
+ * Class URating
+ *
+ * @property int $id User ID
+ * @property int $voting
+ * @property int $votingDate
+ * @property int $skill
+ * @property int $skillDate
+ * @property int $up
+ * @property int $down
+ * @property int $amount
+ */
+class URatingReputation extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'URating';
+}
+
+/**
+ * Class URatingList
+ *
+ * @method URatingReputation Get(int $userid)
+ * @method URatingReputation GetByIndex(int $i)
+ */
+class URatingReputationList extends AbricosModelList {
+}
+
+/**
+ * Class URatingSkill
+ *
+ * @property int $userid
+ * @property string $module
+ * @property int $skill
+ */
+class URatingSkill extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'Skill';
+}
+
+/**
+ * Class URatingSkillList
+ *
+ * @method URatingSkill Get(int $id)
+ * @method URatingSkill GetByIndex(int $i)
+ */
+class URatingSkillList extends AbricosModelList {
+}
+
+/**
+ * Class URatingVote
+ *
+ * @property string $module
+ * @property string $type
+ * @property int $ownerid
+ * @property int $userid
+ * @property int $up
+ * @property int $down
+ * @property int $dateline
+ */
+class URatingVote extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'Vote';
+
+    public function IsEmpty(){
+        return $this->dateline === 0;
+    }
+}
+
+/**
+ * Class URatingVoteList
+ *
+ * @method URatingVote Get(int $id)
+ * @method URatingVote GetByIndex(int $i)
+ */
+class URatingVoteList extends AbricosModelList {
+}
+
+/**
+ * Class URatingVoting
+ *
+ * @property string $module
+ * @property string $type
+ * @property int $ownerid
+ * @property int $voting
+ * @property int $up
+ * @property int $down
+ * @property int $voteAmount
+ * @property int $upddate
+ */
+class URatingVoting extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'Voting';
+}
+
+/**
+ * Class URatingVotingList
+ *
+ * @method URatingVoting Get(int $id)
+ * @method URatingVoting GetByIndex(int $i)
+ */
+class URatingVotingList extends AbricosModelList {
+}
+
+/**
+ * Interface URatingToVoteVars
+ *
+ * @property string $module
+ * @property string $type
+ * @property int $ownerid
+ * @property string $action
+ */
+interface URatingToVoteVars {
+}
+
+/**
+ * Class URatingToVote
+ *
+ * @property URatingToVoteVars $vars
+ * @property int $up
+ * @property int $down
+ * @property URatingVote $vote
+ * @property URatingVoting $voting
+ */
+class URatingToVote extends AbricosResponse {
+    const CODE_OK = 1;
+    const CODE_JUST_ONE_TIME = 2;
+    const CODE_EXTEND_ERROR = 4;
+
+    protected $_structModule = 'urating';
+    protected $_structName = 'ToVote';
+}
+
+/**
+ * Class URatingOwner
+ *
+ * @property string $module
+ * @property string $type
+ * @property int $ownerid
+ */
+class URatingOwner extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'Owner';
+}
+
+/**
+ * Class URatingOwnerList
+ *
+ * @method URatingOwner Get(int $id)
+ * @method URatingOwner GetByIndex(int $i)
+ */
+class URatingOwnerList extends AbricosModelList {
 }

@@ -1,0 +1,19 @@
+{
+  "version": "0.1.0",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "skillid"
+    },
+    "userid": {
+      "type": "int"
+    },
+    "module": {
+      "type": "string",
+      "dbField": "ownerModule"
+    },
+    "skill": {
+      "type": "int"
+    }
+  }
+}

@@ -1,10 +1,43 @@
 var Component = new Brick.Component();
 Component.requires = {
-    mod: [
-        {name: 'widget', files: ['notice.js', 'lib.js']}
-    ]
+    mod: []
 };
 Component.entryPoint = function(NS){
+
+    var Y = Brick.YUI,
+        COMPONENT = this,
+        SYS = Brick.mod.sys;
+
+
+    return; //////////////////////////////////
+
+    NS.UIWidgetList = function(cfg){
+        console.log(cfg); return;
+        var list = cfg['list'];
+        if (!L.isArray(list)){
+            return;
+        }
+        Brick.use(cfg['modname'], 'lib', function(err, ns){
+            for (var i = 0; i < list.length; i++){
+
+                var v = list[i];
+                var el = Dom.get(v['jsid']);
+                if (L.isNull(el)){
+                    continue;
+                }
+
+                new VotingWidget(el, {
+                    'modname': cfg['modname'],
+                    'elementType': cfg['eltype'],
+                    'elementId': v['id'],
+                    'value': v['vl'],
+                    'vote': v['vt'],
+                    'errorlang': cfg['errorlang']
+                });
+            }
+
+        });
+    };
 
     var Dom = YAHOO.util.Dom,
         L = YAHOO.lang;
@@ -158,33 +191,5 @@ Component.entryPoint = function(NS){
     });
     NS.VotingWidget = VotingWidget;
 
-    NS.API.WidgetListByServ = function(cfg){
-
-        var list = cfg['list'];
-        if (!L.isArray(list)){
-            return;
-        }
-
-        Brick.ff(cfg['modname'], 'lib', function(){ // подгрузить компонет lib для фраз ошибок
-            for (var i = 0; i < list.length; i++){
-
-                var v = list[i];
-                var el = Dom.get(v['jsid']);
-                if (L.isNull(el)){
-                    continue;
-                }
-
-                new VotingWidget(el, {
-                    'modname': cfg['modname'],
-                    'elementType': cfg['eltype'],
-                    'elementId': v['id'],
-                    'value': v['vl'],
-                    'vote': v['vt'],
-                    'errorlang': cfg['errorlang']
-                });
-            }
-        });
-
-    };
 
 };

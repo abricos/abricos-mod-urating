@@ -1,0 +1,36 @@
+{
+  "version": "0.1.0",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "voteid"
+    },
+    "module": {
+      "type": "string",
+      "dbField": "ownerModule"
+    },
+    "type": {
+      "type": "string",
+      "dbField": "ownerType"
+    },
+    "ownerid": {
+      "type": "int"
+    },
+    "voting": {
+      "type": "int"
+    },
+    "up": {
+      "type": "int"
+    },
+    "down": {
+      "type": "int"
+    },
+    "voteAmount": {
+      "type": "int"
+    },
+    "upddate": {
+      "type": "date",
+      "rolefn": "IsAdminRole"
+    }
+  }
+}

@@ -1,26 +1,25 @@
 <!--[*]
 [mcss=urating]urating.css[/mcss]
+[mjs=urating]ui.js[/mjs]
 
 [bkvar=bup]
 	<div class="bup"></div>
 [/bkvar]
+
 [bkvar=bval]
 	<div class="bval">{v#val}</div>
 [/bkvar]
+
 [bkvar=bdown]
 	<div class="bdown"></div>
 [/bkvar]
 
 [*]-->
-<div id="{v#jsid}" class="aw-urating">
-	<div class="voting">
-		<div class="ro">
-			<div>
-				{v#bup}
-				{v#bval}
-				{v#bdown}
-				<div class="clear"></div>
-			</div>
-		</div>
-	</div>
+<div id="{v#nodeid}" class="aw-urating voting ro"
+     data-module="{v#module}" data-type="{v#type}"
+     data-id="{v#id}" data-value="" data-vote="{v#vote}">
+    {v#bup}
+    {v#bval}
+    {v#bdown}
+    <div class="clearfix"></div>
 </div>

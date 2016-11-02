@@ -9,11 +9,23 @@
 
 /**
  * Class URatingApp
+ *
+ * @property URatingManager $manager
  */
 class URatingApp extends AbricosApplication {
 
     protected function GetClasses(){
-        return array();
+        return array(
+            'Reputation' => 'URatingReputation',
+            'ReputationList' => 'URatingReputationList',
+            'Skill' => 'URatingSkill',
+            'SkillList' => 'URatingSkillList',
+            'Vote' => 'URatingVote',
+            'VoteList' => 'URatingVoteList',
+            'Voting' => 'URatingVoting',
+            'VotingList' => 'URatingVotingList',
+            'ToVote' => 'URatingToVote'
+        );
     }
 
     protected function GetStructures(){
@@ -22,145 +34,157 @@ class URatingApp extends AbricosApplication {
 
     public function ResponseToJSON($d){
         switch ($d->do){
-            case 'elementvoting':
-                return $this->ElementVoting($d);
+            case 'toVote':
+                return $this->ToVoteToJSON($d->data);
         }
         return null;
     }
 
-    public function ToArray($rows, &$ids1 = "", $fnids1 = 'uid', &$ids2 = "", $fnids2 = '', &$ids3 = "", $fnids3 = ''){
-        $ret = array();
-        while (($row = $this->db->fetch_array($rows))){
-            array_push($ret, $row);
-            if (is_array($ids1)){
-                $ids1[$row[$fnids1]] = $row[$fnids1];
-            }
-            if (is_array($ids2)){
-                $ids2[$row[$fnids2]] = $row[$fnids2];
-            }
-            if (is_array($ids3)){
-                $ids3[$row[$fnids3]] = $row[$fnids3];
-            }
-        }
-        return $ret;
+    public function IsAdminRole(){
+        return $this->manager->IsAdminRole();
     }
 
-    public function ToArrayId($rows, $field = "id"){
-        $ret = array();
-        while (($row = $this->db->fetch_array($rows))){
-            $ret[$row[$field]] = $row;
-        }
-        return $ret;
+    public function IsWriteRole(){
+        return $this->manager->IsWriteRole();
     }
 
-    public function ParamToObject($o){
-        if (is_array($o)){
-            $ret = new stdClass();
-            foreach ($o as $key => $value){
-                $ret->$key = $value;
-            }
-            return $ret;
-        } else if (!is_object($o)){
-            return new stdClass();
+    public function IsViewRole(){
+        return $this->manager->IsViewRole();
+    }
+
+    private function OwnerAppFunctionExist($module, $fn){
+        $ownerApp = Abricos::GetApp($module);
+        if (empty($ownerApp)){
+            return false;
         }
-        return $o;
+        if (!method_exists($ownerApp, $fn)){
+            return false;
+        }
+        return true;
     }
 
     /**
-     * Обработать голос пользователя за элемент модуля
+     * @param $module
+     * @param $type
+     * @param $ownerid
      *
-     * Коды ошибок:
-     *   null - ошибка доступа, неверного запроса и еще чего либо непонятного;
-     *   1 - пользователь уже голосовал за этот элемент;
-     *   2 - модуль не разрешил ставить голос за элемент (см. код ошибки в merror);
-     *   0 - все нормально, голос установлен
-     *
-     * @param object $d
-     * @return object
+     * @return URatingOwner
      */
-    public function ElementVoting($d){
+    public function Owner($module, $type, $ownerid){
+        if ($module instanceof URatingOwner){
+            return $module;
+        }
+
+        return $this->InstanceClass('Owner', array(
+            'module' => $module,
+            'type' => $type,
+            'ownerid' => $ownerid
+        ));
+    }
+
+    /**
+     * @return URatingReputation
+     */
+    public function Reputation(){
+        $userid = Abricos::$user->id;
+
+        if ($this->CacheExists('Rep', $userid)){
+            return $this->Cache('Rep', $userid);
+        }
+
+        $d = URatingQuery::Reputation($this->db);
+
+        /** @var URatingReputation $ret */
+        $ret = $this->InstanceClass('Reputation', $d);
+
+        $this->SetCache('Rep', $userid, $ret);
+
+        return $ret;
+    }
+
+    /**
+     * @param URatingOwner $owner
+     * @return URatingVote
+     */
+    public function Vote(URatingOwner $owner){
+        $d = URatingQuery::Vote($this->db, $owner);
+
+        return $this->InstanceClass('Vote', $d);
+    }
+
+    /**
+     * @param URatingOwner $owner
+     * @return URatingVoting
+     */
+    public function Voting(URatingOwner $owner){
+        $d = URatingQuery::Voting($this->db, $owner);
+
+        /** @var URatingVoting $ret */
+        $ret = $this->InstanceClass('Voting', $d);
+
+        return $ret;
+    }
+
+    public function ToVoteToJSON($d){
+        $res = $this->ToVote($d);
+        return $this->ResultToJSON('toVote', $res);
+    }
+
+    public function ToVote($d){
         if (!$this->IsWriteRole()){
-            return null;
-        }
-        if (!($d->act == 'up' || $d->act == 'down' || $d->act == 'refrain')){
-            return null;
+            return AbricosResponse::ERR_FORBIDDEN;
         }
 
-        $module = Abricos::GetModule($d->module);
-        if (empty($module)){
-            return null;
-        }
-        $manager = $module->GetManager();
-        if (!method_exists($manager, 'URating_IsElementVoting')){
-            return null;
-        }
-        $ret = new stdClass();
-        $ret->error = 0;
+        /** @var URatingToVote $ret */
+        $ret = $this->InstanceClass('ToVote', $d);
+        $vars = $ret->vars;
 
-        // Может этот пользователь уже ставил голос на этот элемент?
-        $dbUVote = URatingQuery::ElementVoteByUser($this->db, $d->module, $d->eltype, $d->elid, $this->userid);
+        switch ($vars->action){
+            case 'up':
+                $ret->up = 1;
+                break;
+            case 'down':
+                $ret->down = 1;
+                break;
+            case 'refrain':
+                break;
+            default :
+                return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
+        }
 
-        if (!empty($dbUVote)){ // уже поставлен голос за этот элемент
-            $ret->error = 1;
+        if (!$this->OwnerAppFunctionExist($vars->module, 'URating_IsVoting')){
+            return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
+        }
+
+        $owner = $this->Owner($vars->module, $vars->type, $vars->ownerid);
+        $vote = $this->Vote($owner);
+
+        if (!$vote->IsEmpty()){ // уже поставлен голос за этот элемент
+            $ret->AddCode(URatingToVote::CODE_JUST_ONE_TIME);
             return $ret;
         }
+
+        $rep = $this->Reputation();
 
         // Можно ли ставить голос текущему пользователю за этот элемент
         // Нужно спросить сам модуль
-        $uRep = $this->UserReputation($this->userid);
-        $ret->merror = $manager->URating_IsElementVoting($uRep, $d->act, $d->elid, $d->eltype);
-        if ($ret->merror > 0){ // модуль не дал разрешение на устновку голоса
-            $ret->error = 2;
-            return $ret;
+
+        $ownerApp = Abricos::GetApp($vars->module);
+        if (!$ownerApp->URating_IsVoting($owner, $rep)){
+            return $ret->SetError(AbricosResponse::ERR_FORBIDDEN, URatingToVote::CODE_EXTEND_ERROR);
         }
         // голосование за элемент разрешено модулем
-        $voteup = 0;
-        $votedown = 0;
-        if ($d->act == 'up'){
-            $voteup = 1;
-        } else if ($d->act == 'down'){
-            $votedown = 1;
-        }
 
-        URatingQuery::ElementVoteAppend($this->db, $d->module,
-            $d->eltype, $d->elid, $this->userid, $voteup, $votedown);
+        URatingQuery::VoteAppend($this->db, $ret);
 
-        $ret->info = URatingQuery::ElementVoteCalc($this->db, $d->module, $d->eltype, $d->elid);
+        $ret->AddCode(URatingToVote::CODE_OK);
 
-        if (method_exists($manager, 'URating_OnElementVoting')){
-            $manager->URating_OnElementVoting($d->eltype, $d->elid, $ret->info);
-        }
+        $ret->vote = $this->Vote($owner);
+        $ret->voting = $this->Voting($owner);
 
         return $ret;
     }
 
-    private $_repCache = array();
-
-    /**
-     * Репутация пользователя
-     *
-     * @param integer $userid если 0, то текущий пользователь
-     * @return URatingUserReputation
-     */
-    public function UserReputation($userid = 0){
-        if (!$this->IsViewRole()){
-            return null;
-        }
-        if ($userid == 0){
-            $userid = $this->userid;
-        }
-        if (!empty($this->_repCache[$userid])){
-            return $this->_repCache[$userid];
-        }
-        if ($userid == 0){
-            return new URatingUserReputation($userid, array());
-        }
-
-        $row = URatingQuery::UserReputation($this->db, $userid);
-        $this->_repCache[$userid] = new URatingUserReputation($userid, $row);
-
-        return $this->_repCache[$userid];
-    }
 
     private $_voteCountCache = null;
 

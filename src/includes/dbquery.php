@@ -12,6 +12,93 @@
  * Class URatingQuery
  */
 class URatingQuery {
+
+    public static function Reputation(Ab_Database $db, $userid = 0){
+        if (empty($userid)){
+            $userid = Abricos::$user->id;
+        }
+
+        $sql = "
+			SELECT *
+			FROM ".$db->prefix."urating
+			WHERE userid=".bkint($userid)."
+			LIMIT 1
+		";
+        return $db->query_first($sql);
+    }
+
+    public static function Vote(Ab_Database $db, URatingOwner $owner, $userid = 0){
+        if (empty($userid)){
+            $userid = Abricos::$user->id;
+        }
+        $sql = "
+			SELECT *
+			FROM ".$db->prefix."urating_vote
+			WHERE ownerModule='".bkstr($owner->module)."' 
+				AND ownerType='".bkstr($owner->type)."' 
+				AND ownerid=".bkint($owner->ownerid)."
+				AND userid=".bkint($userid)."
+			LIMIT 1
+		";
+        return $db->query_first($sql);
+    }
+
+    public static function VoteAppend(Ab_Database $db, URatingToVote $toVote){
+        $vars = $toVote->vars;
+
+        $sql = "
+			INSERT INTO ".$db->prefix."urating_vote
+			(ownerModule, ownerType, ownerid, userid, up, down, dateline) VALUES (
+				'".bkstr($vars->module)."', 
+				'".bkstr($vars->type)."',
+				".bkint($vars->ownerid).", 
+				".bkint(Abricos::$user->id).",
+				".bkint($toVote->up).",
+				".bkint($toVote->down).",
+				".TIMENOW."
+			 )
+		";
+        $db->query_write($sql);
+
+        $sql = "
+            INSERT INTO ".$db->prefix."urating_voting
+                (ownerModule, ownerType, ownerid, voting, up, down, voteAmount, upddate) 
+            SELECT
+                ownerModule, ownerType, ownerid, 
+                (sum(up)-sum(down)) as voting,
+                sum(up) as up,
+                sum(down) as down,
+                count(*) as voteAmount,
+                ".TIMENOW." as upddate
+            FROM ".$db->prefix."urating_voting v
+            WHERE ownerModule='".bkstr($vars->module)."', 
+                AND ownerType='".bkstr($vars->type)."',
+                AND ownerid=".bkint($vars->ownerid)."
+			GROUP BY ownerModule, ownerType, ownerid
+			ON DUPLICATE KEY UPDATE
+			    voting=v.voting,
+			    up=v.up,
+			    down=v.down,
+			    voteAmount=v.voteAmount,
+			    upddate=".TIMENOW."
+		";
+        $db->query_write($sql);
+    }
+
+    public static function Voting(Ab_Database $db, URatingOwner $owner){
+        $sql = "
+			SELECT *
+			FROM ".$db->prefix."urating_voteing
+			WHERE ownerModule='".bkstr($owner->module)."' 
+				AND ownerType='".bkstr($owner->type)."' 
+				AND ownerid=".bkint($owner->ownerid)."
+			LIMIT 1
+		";
+        return $db->query_first($sql);
+    }
+
+
+
     /**
      * Количество используемых голосов за прошедшие сутки
      *
@@ -28,126 +115,6 @@ class URatingQuery {
 			FROM ".$db->prefix."urating_vote
 			WHERE userid=".bkint($userid)." AND dateline>".$t1."
 			GROUP BY module
-		";
-        return $db->query_first($sql);
-    }
-
-    public static function ElementVoteByUser(Ab_Database $db, $modname, $eltype, $elid, $userid){
-        $sql = "
-			SELECT 
-				module as m,
-				elementtype as tp,
-				elementid as elid,
-				userid as uid,
-				voteup as vup,
-				votedown as vdown,
-				dateline as dl
-			FROM ".$db->prefix."urating_vote
-			WHERE module='".bkstr($modname)."' 
-				AND elementtype='".bkstr($eltype)."' 
-				AND elementid=".bkint($elid)."
-				AND userid=".bkint($userid)."
-			LIMIT 1
-		";
-        return $db->query_first($sql);
-    }
-
-    public static function ElementVoteAppend(Ab_Database $db, $modname, $eltype, $elid, $userid, $voteup, $votedown){
-        // добавление голоса
-        $sql = "
-			INSERT IGNORE INTO ".$db->prefix."urating_vote
-			(module, elementtype, elementid, userid, voteup, votedown, dateline) VALUES
-			(
-				'".bkstr($modname)."', 
-				'".bkstr($eltype)."',
-				".bkint($elid).", 
-				".bkint($userid).",
-				".bkint($voteup).",
-				".bkint($votedown).",
-				".TIMENOW."
-			 )
-		";
-        $db->query_write($sql);
-
-        // подсчет итога
-        $sql = "
-			SELECT
-				count(*) as votecount, 
-				sum(voteup) as voteup,
-				sum(votedown) as votedown
-			FROM ".$db->prefix."urating_vote
-			WHERE module='".bkstr($modname)."' 
-				AND elementtype='".bkstr($eltype)."' 
-				AND elementid=".bkint($elid)."
-			GROUP BY module, elementtype, elementid
-		";
-        $row = $db->query_first($sql);
-
-        // запись результата
-        $sql = "
-			INSERT INTO ".$db->prefix."urating_votecalc
-			(module, elementtype, elementid, voteval, votecount, voteup, votedown, upddate) VALUES
-			(
-				'".bkstr($modname)."',
-				'".bkstr($eltype)."',
-				".bkint($elid).",
-				".bkint(intval($row['voteup']) - intval($row['votedown'])).",
-				".bkint($row['votecount']).",
-				".bkint($row['voteup']).",
-				".bkint($row['votedown']).",
-				".TIMENOW."
-			) ON DUPLICATE KEY UPDATE
-				votecount=".bkint($row['votecount']).",
-				voteup=".bkint($row['voteup']).",
-				votedown=".bkint($row['votedown']).",
-				upddate=".TIMENOW."
-		";
-        $db->query_write($sql);
-    }
-
-    public static function ElementVoteCalc(Ab_Database $db, $modname, $eltype, $elid){
-        $fld = "";
-        $tbl = "";
-        $userid = Abricos::$user->id;
-        if ($userid > 0){ // необходимо показать отношение к пользователю
-            $fld .= "
-				,IF(ISNULL(vt.userid), null, IF(vt.voteup>0, 1, IF(vt.votedown>0, -1, 0))) as vote
-			";
-            $tbl .= "
-				LEFT JOIN ".$db->prefix."urating_vote vt ON vt.module='".bkstr($modname)."'
-					AND vt.elementtype='".bkstr($eltype)."' 
-					AND vt.elementid=".bkint($elid)." 
-					AND vt.userid=".bkint($userid)."
-			";
-        }
-
-        $sql = "
-			SELECT
-				vc.votecount as cnt,
-				vc.voteval as val,
-				vc.voteup as up,
-				vc.votedown as down
-				".$fld."
-			FROM ".$db->prefix."urating_votecalc vc 
-			".$tbl." 
-			WHERE vc.module='".bkstr($modname)."' 
-				AND vc.elementtype='".bkstr($eltype)."' 
-				AND vc.elementid=".bkint($elid)." 
-			LIMIT 1 
-		";
-        return $db->query_first($sql);
-    }
-
-    public static function UserReputation(Ab_Database $db, $userid){
-        $sql = "
-			SELECT
-				userid as id,
-				reputation as rep,
-				votecount as vcnt,
-				skill
-			FROM ".$db->prefix."urating_user
-			WHERE userid=".bkint($userid)."
-			LIMIT 1
 		";
         return $db->query_first($sql);
     }

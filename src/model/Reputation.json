@@ -1,0 +1,32 @@
+{
+  "version": "0.1.0",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "userid"
+    },
+    "voting": {
+      "type": "int"
+    },
+    "votingDate": {
+      "type": "date",
+      "rolefn": "IsAdminRole"
+    },
+    "skill": {
+      "type": "int"
+    },
+    "skillDate": {
+      "type": "date",
+      "rolefn": "IsAdminRole"
+    },
+    "up": {
+      "type": "int"
+    },
+    "down": {
+      "type": "int"
+    },
+    "amount": {
+      "type": "int"
+    }
+  }
+}

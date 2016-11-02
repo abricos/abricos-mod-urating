@@ -20,7 +20,7 @@ class URatingModule extends Ab_Module {
     const PERIOD_CHECK = 300;
 
     public function __construct(){
-        $this->version = "0.1.2";
+        $this->version = "0.2.0";
         $this->name = "urating";
         $this->permission = new URatingPermission($this);
     }

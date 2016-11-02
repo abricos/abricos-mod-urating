@@ -1,0 +1,18 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "module": {
+      "type": "string",
+      "json": "m"
+    },
+    "type": {
+      "type": "string",
+      "json": "t"
+    },
+    "ownerid": {
+      "type": "int",
+      "json": "i"
+    }
+  }
+}

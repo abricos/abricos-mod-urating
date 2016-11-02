@@ -1,0 +1,40 @@
+{
+  "type": "response",
+  "version": "0.1.0",
+  "vars": {
+    "module": {
+      "type": "string",
+      "parse": "full"
+    },
+    "type": {
+      "type": "string",
+      "parse": "full"
+    },
+    "ownerid": {
+      "type": "int"
+    },
+    "action": {
+      "type": "string",
+      "parse": "full"
+    }
+  },
+  "codes": {
+    "OK": 1,
+    "JUST_ONE_TIME": 2,
+    "EXTEND_ERROR": 4
+  },
+  "fields": {
+    "up": {
+      "type": "int"
+    },
+    "down": {
+      "type": "int"
+    },
+    "vote": {
+      "type": "model:Vote"
+    },
+    "voting": {
+      "type": "model:Voting"
+    }
+  }
+}
