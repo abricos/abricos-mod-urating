@@ -24,7 +24,10 @@ class URatingApp extends AbricosApplication {
             'VoteList' => 'URatingVoteList',
             'Voting' => 'URatingVoting',
             'VotingList' => 'URatingVotingList',
-            'ToVote' => 'URatingToVote'
+            'ToVote' => 'URatingToVote',
+            'Owner' => 'URatingOwner',
+            'OwnerConfig' => 'URatingOwnerConfig',
+            'OwnerConfigList' => 'URatingOwnerConfigList',
         );
     }
 
@@ -83,6 +86,45 @@ class URatingApp extends AbricosApplication {
     }
 
     /**
+     * @return URatingOwnerConfigList
+     */
+    public function OwnerConfigList(){
+        if ($this->CacheExists('OwnerConfig')){
+            return $this->Cache('OwnerConfig');
+        }
+
+        /** @var URatingOwnerConfigList $list */
+        $list = $this->InstanceClass('OwnerConfigList');
+        $rows = URatingQuery::OwnerConfigList($this->db);
+
+        while (($d = $this->db->fetch_array($rows))){
+            $list->Add($this->InstanceClass('OwnerConfig', $d));
+        }
+
+        $this->SetCache('OwnerConfig', $list);
+
+        return $list;
+    }
+
+    /**
+     * @param URatingOwner|string $module
+     * @param string $type (optional)
+     * @return URatingOwnerConfig
+     */
+    public function OwnerConfig($module, $type = ''){
+        $list = $this->OwnerConfigList();
+        $config = $list->GetByOwner($module, $type);
+
+        if ($config->id > 0){
+            return $config;
+        }
+
+        $config->id = URatingQuery::OwnerConfigSave($this->db, $config);
+
+        return $config;
+    }
+
+    /**
      * @return URatingReputation
      */
     public function Reputation(){
@@ -116,7 +158,15 @@ class URatingApp extends AbricosApplication {
      * @param URatingOwner $owner
      * @return URatingVoting
      */
-    public function Voting(URatingOwner $owner){
+    /**
+     * @param URatingOwner|string $module
+     * @param string $type (optional)
+     * @param int $ownerid (optional)
+     * @return URatingVoting
+     */
+    public function Voting($module, $type = '', $ownerid = 0){
+        $owner = $this->Owner($module, $type, $ownerid);
+
         $d = URatingQuery::Voting($this->db, $owner);
 
         /** @var URatingVoting $ret */
@@ -184,6 +234,33 @@ class URatingApp extends AbricosApplication {
 
         return $ret;
     }
+
+    public function VotingHTML($module, $type, $ownerid){
+        if ($this->CacheExists('brick', 'vote')){
+            $brick = $this->Cache('brick', 'vote');
+        } else {
+            $brick = Brick::$builder->LoadBrickS('urating', 'vote');
+            $this->SetCache('brick', 'vote', $brick);
+        }
+
+        $v = &$brick->param->var;
+
+        return Brick::ReplaceVarByData($brick->content, array(
+            'bup' => $v['bup'],
+            'bval' => Brick::ReplaceVarByData($v['bval'], array(
+                "val" => 0 ? "—" : 0
+            )),
+            'bdown' => $v['bdown'],
+            'module' => $module,
+            'type' => $type,
+            'nodeid' => $brick->id.'-'.$ownerid,
+            'id' => $ownerid,
+            'value' => 10,
+            'vote' => 20
+        ));
+    }
+
+    ////////////////////////////////////////////////////////////
 
 
     private $_voteCountCache = null;
@@ -358,11 +435,5 @@ class URatingApp extends AbricosApplication {
         $ret = new stdClass();
         $ret->skill = $rep->reputation * 10;
         return $ret;
-    }
-
-    private $_idCounter = 1;
-
-    public function GenId(){
-        return "vote".($this->_idCounter++).'-';
     }
 }

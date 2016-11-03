@@ -8,66 +8,6 @@
  */
 
 /**
- * Class URatingBuilder
- */
-class URatingBuilder {
-
-    public $idPrefix = "";
-
-    public $modName;
-    public $elType;
-    public $errorLang = '';
-
-    private $_list = array();
-
-    public function __construct($modName, $elType, $errorLang = ''){
-        /** @var URatingApp $uratingApp */
-        $uratingApp = Abricos::GetApp('urating');
-
-        $this->idPrefix = $uratingApp->GenId();
-
-        $this->modName = $modName;
-        $this->elType = $elType;
-        $this->errorLang = $errorLang;
-    }
-
-    public function BuildVote($cfg){
-        /** @var URatingApp $uratingApp */
-        $uratingApp = Abricos::GetApp('urating');
-
-        $cfg = $uratingApp->ParamToObject($cfg);
-
-        $vote = new URatingVote($cfg->elid, $cfg->value, $cfg->vote);
-        $vote->jsid = $this->idPrefix.$cfg->elid;
-
-        array_push($this->_list, $vote);
-
-        $brick = Brick::$builder->LoadBrickS('urating', 'vote', null, null);
-        $v = &$brick->param->var;
-
-        $s = Brick::ReplaceVarByData($brick->content, array(
-            'bup' => $v['bup'],
-            'bval' => Brick::ReplaceVarByData($v['bval'], array(
-                "val" => is_null($cfg->value) ? "—" : $cfg->value
-            )),
-            'bdown' => $v['bdown'],
-            'module' => $this->modName,
-            'type' => $this->elType,
-            'nodeid' => $vote->jsid,
-            'id' => $cfg->elid,
-            'value' => $cfg->value,
-            'vote' => $cfg->vote
-        ));
-
-        return $s;
-    }
-
-    public function BuildJSMan(){
-        return "";
-    }
-}
-
-/**
  * Class URating
  *
  * @property int $id User ID
@@ -121,16 +61,15 @@ class URatingSkillList extends AbricosModelList {
  * @property string $type
  * @property int $ownerid
  * @property int $userid
- * @property int $up
- * @property int $down
- * @property int $dateline
+ * @property int $vote
+ * @property int $voteDate
  */
 class URatingVote extends AbricosModel {
     protected $_structModule = 'urating';
     protected $_structName = 'Vote';
 
     public function IsEmpty(){
-        return $this->dateline === 0;
+        return $this->id === 0;
     }
 }
 
@@ -149,15 +88,43 @@ class URatingVoteList extends AbricosModelList {
  * @property string $module
  * @property string $type
  * @property int $ownerid
+ *
+ * @property int $voteCount
+ * @property int $voteUpCount
+ * @property int $voteRefrainCount
+ * @property int $voteDownCount
+ *
  * @property int $voting
- * @property int $up
- * @property int $down
- * @property int $voteAmount
- * @property int $upddate
+ * @property int $votingUp
+ * @property int $votingDown
+ * @property int $votingDate
+ *
+ * @property URatingVote $vote
+ * @property URatingOwnerConfig $config
  */
 class URatingVoting extends AbricosModel {
     protected $_structModule = 'urating';
     protected $_structName = 'Voting';
+
+    /**
+     * Дата создания (публикации и т.п.) элемента.
+     * Необходима для ограничения голосования по времени
+     *
+     * @var int
+     */
+    public $ownerDate = 0;
+
+    public function __construct($d){
+        parent::__construct($d);
+
+        /** @var URatingApp $app */
+        $app = Abricos::GetApp('urating');
+        $this->vote = $app->InstanceClass('Vote', $d);
+
+        $this->config = $app->OwnerConfig($this->module, $this->type);
+    }
+
+
 }
 
 /**
@@ -217,4 +184,64 @@ class URatingOwner extends AbricosModel {
  * @method URatingOwner GetByIndex(int $i)
  */
 class URatingOwnerList extends AbricosModelList {
+}
+
+/**
+ * Class URatingOwnerConfig
+ *
+ * @property string $module
+ * @property string $type
+ *
+ * @property int $votingPeriod Разрешенный период голосования (0 - всегда)
+ */
+class URatingOwnerConfig extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'OwnerConfig';
+}
+
+/**
+ * Class URatingOwnerConfigList
+ *
+ * @method URatingOwnerConfig Get(int $id)
+ * @method URatingOwnerConfig GetByIndex(int $i)
+ */
+class URatingOwnerConfigList extends AbricosModelList {
+
+    private $_cacheConfig = array();
+
+    /**
+     * @param URatingOwnerConfig $item
+     */
+    public function Add($item){
+        parent::Add($item);
+
+        if (!isset($this->_cacheConfig[$item->module])){
+            $this->_cacheConfig[$item->module] = $item;
+        }
+        $this->_cacheConfig[$item->module][$item->type] = $item;
+    }
+
+    /**
+     * @param URatingOwner|string $module
+     * @param string $type (optional)
+     * @return URatingOwnerConfig
+     */
+    public function GetByOwner($module, $type = ''){
+        if ($module instanceof URatingOwner){
+            $type = $module->type;
+            $module = $module->module;
+        }
+        if (isset($this->_cacheConfig[$module][$type])){
+            return $this->_cacheConfig[$module][$type];
+        }
+
+        $config = $this->app->InstanceClass('OwnerConfig', array(
+            'module' => $module,
+            'type' => $type
+        ));
+
+        $this->_cacheConfig[$module][$type] = $config;
+
+        return $config;
+    }
 }

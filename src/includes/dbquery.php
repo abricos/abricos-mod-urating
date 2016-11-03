@@ -60,6 +60,7 @@ class URatingQuery {
 		";
         $db->query_write($sql);
 
+        /*
         $sql = "
             INSERT INTO ".$db->prefix."urating_voting
                 (ownerModule, ownerType, ownerid, voting, up, down, voteAmount, upddate) 
@@ -83,21 +84,62 @@ class URatingQuery {
 			    upddate=".TIMENOW."
 		";
         $db->query_write($sql);
+        /**/
     }
 
     public static function Voting(Ab_Database $db, URatingOwner $owner){
+        $userid = Abricos::$user->id;
+
+        if ($userid == 0){
+            $sql = "
+                SELECT r.*
+                FROM ".$db->prefix."urating_voting r
+                WHERE r.ownerModule='".bkstr($owner->module)."' 
+                    AND r.ownerType='".bkstr($owner->type)."' 
+                    AND r.ownerid=".bkint($owner->ownerid)."
+                LIMIT 1
+            ";
+            return $db->query_first($sql);
+        }
+
         $sql = "
-			SELECT *
-			FROM ".$db->prefix."urating_voteing
-			WHERE ownerModule='".bkstr($owner->module)."' 
-				AND ownerType='".bkstr($owner->type)."' 
-				AND ownerid=".bkint($owner->ownerid)."
-			LIMIT 1
-		";
+            SELECT r.*
+            FROM ".$db->prefix."urating_voting r
+            LEFT JOIN ".$db->prefix."urating_vote v
+                ON r.ownerModule=v.ownerModule
+                    AND r.ownerType=v.ownerType
+                    AND r.ownerid=v.ownerid
+                    AND v.userid=".intval($userid)."
+            WHERE r.ownerModule='".bkstr($owner->module)."' 
+                AND r.ownerType='".bkstr($owner->type)."' 
+                AND r.ownerid=".bkint($owner->ownerid)."
+            LIMIT 1
+        ";
         return $db->query_first($sql);
     }
 
+    public static function OwnerConfigList(Ab_Database $db){
+        $sql = "
+            SELECT *
+            FROM ".$db->prefix."urating_ownerConfig
+            ORDER BY ownerModule, ownerType
+        ";
+        return $db->query_read($sql);
+    }
 
+    public static function OwnerConfigSave(Ab_Database $db, URatingOwnerConfig $config){
+        $sql = "
+            INSERT INTO ".$db->prefix."urating_ownerConfig
+            (ownerModule, ownerType, votingPeriod) VALUES (
+                '".bkstr($config->module)."', 
+                '".bkstr($config->type)."',
+                ".intval($config->votingPeriod)." 
+            ) ON DUPLICATE KEY UPDATE
+                votingPeriod=".intval($config->votingPeriod)."
+        ";
+        $db->query_write($sql);
+        return $db->insert_id();
+    }
 
     /**
      * Количество используемых голосов за прошедшие сутки

@@ -16,21 +16,30 @@
     "ownerid": {
       "type": "int"
     },
+    "voteCount": {
+      "type": "int"
+    },
+    "voteUpCount": {
+      "type": "int"
+    },
+    "voteDownCount": {
+      "type": "int"
+    },
     "voting": {
       "type": "int"
     },
-    "up": {
+    "votingUp": {
       "type": "int"
     },
-    "down": {
+    "votingDown": {
       "type": "int"
     },
-    "voteAmount": {
-      "type": "int"
-    },
-    "upddate": {
+    "votingDate": {
       "type": "date",
       "rolefn": "IsAdminRole"
+    },
+    "vote": {
+      "type": "model:Vote"
     }
   }
 }

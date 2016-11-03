@@ -24,20 +24,11 @@ if ($updateManager->isUpdate('0.2.0')){
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating (
 			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
-			
-			voting int(10) NOT NULL DEFAULT 0 COMMENT 'Репутация пользователя (голоса `за` и `против`)',
-			votingDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
-			
-			skill int(10) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)',
+
+            skill int(10) NOT NULL DEFAULT 0 COMMENT '',
 			skillDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
-			
-			up int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ЗА пользователя',
-			down int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ПРОТИВ пользователя',
-			amount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Кол-во голосов за репутацию',
-			votedate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета репутации',
-			
+
 			UNIQUE KEY userid (userid),
-			KEY (voting),
 			KEY (skill)
 		)".$charset
     );
@@ -51,9 +42,8 @@ if ($updateManager->isUpdate('0.2.0')){
 			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT '',
 			
-			skill int(7) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)',
-			
-			upddate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+			skill int(7) NOT NULL DEFAULT 0 COMMENT '',
+			skillDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 			
 			PRIMARY KEY (skillid),
 			UNIQUE KEY skill (userid, ownerModule)
@@ -74,7 +64,7 @@ if ($updateManager->isUpdate('0.2.0')){
 
         $db->query_write("
             INSERT INTO ".$pfx."urating_skill
-            (userid, ownerModule, skill, upddate)
+            (userid, ownerModule, skill, skillDate)
             SELECT
                 userid, `module`, skill, upddate
             FROM ".$pfx."urating_modcalc
@@ -97,9 +87,9 @@ if ($updateManager->isUpdate('0.2.0')){
         );/**/
         $db->query_write("
             INSERT INTO ".$pfx."urating
-            (userid, voting, skill, up, down, amount, votedate, upddate)
+            (userid, skill, skillDate)
             SELECT
-                userid, reputation, skill, voteup, votedown, votecount, votedate, upddate
+                userid, skill, upddate
             FROM ".$pfx."urating_user
         ");
         $db->query_write("DROP TABLE ".$pfx."urating_user");
@@ -121,7 +111,7 @@ if ($updateManager->isUpdate('0.2.0')){
     }
 
     // голоса за объект в модуле
-    // за пользователя будет ownerModule='urating', ownerType='user', ownerid='{userid}'
+    // за пользователя будет ownerModule='uprofile', ownerType='user', ownerid='{userid}'
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_vote (
             voteid int(10) unsigned NOT NULL auto_increment,
@@ -131,28 +121,35 @@ if ($updateManager->isUpdate('0.2.0')){
 			ownerid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
 			
 			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
-				
-			up int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ЗА (возможно кол-во)',
-			down int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ПРОТИВ (возможно кол-во)',
-
-			dateline int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
+			
+			vote int(5) NOT NULL DEFAULT 0 COMMENT 'Голос (возможно кол-во)',
+			voteDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
 			
 			PRIMARY KEY (voteid),
-			UNIQUE KEY voteUser (ownerModule, ownertype, ownerid, userid),
-			KEY voteOwner (ownerModule, ownertype, ownerid),
-			KEY userid (userid)
+			UNIQUE KEY voteUser (ownerModule, ownerType, ownerid, userid),
+			KEY voteOwner (ownerModule, ownerType, ownerid),
+			KEY userid (userid),
+			KEY voteDate (voteDate)
 		)".$charset
     );
 
     if (!$updateManager->isInstall()){
         $db->query_write("
             INSERT INTO ".$pfx."urating_vote
-            (ownerModule, ownerType, ownerid, userid, up, down, dateline)
+            (ownerModule, ownerType, ownerid, userid, vote, voteDate)
             SELECT
-                `module`, elementtype, elementid, userid, voteup, votedown, dateline
+                `module`, elementtype, elementid, userid, 
+                voteup+votedown*(-1), dateline
             FROM ".$pfx."urating_voteold
         ");
         $db->query_write("DROP TABLE ".$pfx."urating_voteold");
+
+        $db->query_write("
+            UPDATE ".$pfx."urating_vote
+            SET ownerModule='uprofile'
+            WHERE ownerModule='urating'
+        ");
+
     }
 
     // результат голосования за объект в модуле
@@ -163,13 +160,16 @@ if ($updateManager->isUpdate('0.2.0')){
 			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			ownerType varchar(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			ownerid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
-	
-			voting int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
-			up int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество ЗА',
-			down int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество ПРОТИВ',
-			voteAmount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество всего голосов',
 			
-			upddate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+            voteCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов',
+			voteUpCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов ЗА',
+			voteRefrainCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего воздержалось',
+			voteDownCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов ПРОТИВ',
+
+			voting int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
+			votingUp int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Результат ЗА',
+			votingDown int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Результат ПРОТИВ',
+			votingDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 
 			PRIMARY KEY (votingid),
 			UNIQUE KEY voting (ownerModule, ownerType, ownerid)
@@ -192,14 +192,20 @@ if ($updateManager->isUpdate('0.2.0')){
                 KEY `voteval` (`voteval`)
             )".$charset
         );/**/
-
-        $db->query_write("
-            INSERT INTO ".$pfx."urating_voting
-            (ownerModule, ownerType, ownerid, voting, up, down, voteAmount, upddate)
-            SELECT
-                `module`, elementtype, elementid, voteval, voteup, votedown, votecount, upddate 
-            FROM ".$pfx."urating_votecalc
-        ");
         $db->query_write("DROP TABLE ".$pfx."urating_votecalc");
     }
+
+    $db->query_write("
+		CREATE TABLE IF NOT EXISTS ".$pfx."urating_ownerConfig (
+            configid int(10) unsigned NOT NULL auto_increment,
+
+			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+			ownerType varchar(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
+			
+			votingPeriod int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Срок голосования в секундах',
+
+			PRIMARY KEY (configid),
+			UNIQUE KEY config (ownerModule, ownerType)
+		)".$charset
+    );
 }
