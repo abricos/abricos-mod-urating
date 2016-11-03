@@ -88,7 +88,7 @@ Component.entryPoint = function(NS){
                     this.voteUp();
                     return true;
                 case tp['bvalue']:
-                    this.voteRefrain();
+                    this.voteAbstain();
                     return true;
                 case tp['bdown']:
                     this.voteDown();
@@ -101,7 +101,7 @@ Component.entryPoint = function(NS){
         voteDown: function(){
             this.ajax('down');
         },
-        voteRefrain: function(){
+        voteAbstain: function(){
             this.ajax('refrain');
         },
         ajax: function(act){

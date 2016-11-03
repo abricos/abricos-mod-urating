@@ -91,7 +91,7 @@ class URatingVoteList extends AbricosModelList {
  *
  * @property int $voteCount
  * @property int $voteUpCount
- * @property int $voteRefrainCount
+ * @property int $voteAbstainCount
  * @property int $voteDownCount
  *
  * @property int $voting
@@ -109,22 +109,9 @@ class URatingVoting extends AbricosModel {
     /**
      * Дата создания (публикации и т.п.) элемента.
      * Необходима для ограничения голосования по времени
-     *
      * @var int
      */
     public $ownerDate = 0;
-
-    public function __construct($d){
-        parent::__construct($d);
-
-        /** @var URatingApp $app */
-        $app = Abricos::GetApp('urating');
-        $this->vote = $app->InstanceClass('Vote', $d);
-
-        $this->config = $app->OwnerConfig($this->module, $this->type);
-    }
-
-
 }
 
 /**
@@ -216,9 +203,9 @@ class URatingOwnerConfigList extends AbricosModelList {
         parent::Add($item);
 
         if (!isset($this->_cacheConfig[$item->module])){
-            $this->_cacheConfig[$item->module] = $item;
+            $this->_cacheConfig[$item->module] = array();
         }
-        $this->_cacheConfig[$item->module][$item->type] = $item;
+        $this->_cacheConfig[$item->module]['t'.$item->type] = $item;
     }
 
     /**
@@ -231,8 +218,11 @@ class URatingOwnerConfigList extends AbricosModelList {
             $type = $module->type;
             $module = $module->module;
         }
-        if (isset($this->_cacheConfig[$module][$type])){
-            return $this->_cacheConfig[$module][$type];
+        if (empty($module)){
+            throw new Exception('Module is empty in URating Owner');
+        }
+        if (isset($this->_cacheConfig[$module]['t'.$type])){
+            return $this->_cacheConfig[$module]['t'.$type];
         }
 
         $config = $this->app->InstanceClass('OwnerConfig', array(
@@ -240,7 +230,7 @@ class URatingOwnerConfigList extends AbricosModelList {
             'type' => $type
         ));
 
-        $this->_cacheConfig[$module][$type] = $config;
+        $this->_cacheConfig[$module]['t'.$type] = $config;
 
         return $config;
     }

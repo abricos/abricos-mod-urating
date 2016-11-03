@@ -149,7 +149,6 @@ if ($updateManager->isUpdate('0.2.0')){
             SET ownerModule='uprofile'
             WHERE ownerModule='urating'
         ");
-
     }
 
     // результат голосования за объект в модуле
@@ -163,7 +162,7 @@ if ($updateManager->isUpdate('0.2.0')){
 			
             voteCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов',
 			voteUpCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов ЗА',
-			voteRefrainCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего воздержалось',
+			voteAbstainCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего воздержалось',
 			voteDownCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов ПРОТИВ',
 
 			voting int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
@@ -177,22 +176,28 @@ if ($updateManager->isUpdate('0.2.0')){
     );
 
     if (!$updateManager->isInstall()){
-        /* старая таблица
-        $db->query_write("
-            CREATE TABLE IF NOT EXISTS ".$pfx."urating_votecalc (
-                `module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
-                `elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
-                `elementid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
-                `voteval` int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
-                `votecount` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество всего голосов',
-                `voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество ЗА',
-                `votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество ПРОТИВ',
-                `upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
-                UNIQUE KEY `modvote` (`module`,`elementtype`,`elementid`),
-                KEY `voteval` (`voteval`)
-            )".$charset
-        );/**/
         $db->query_write("DROP TABLE ".$pfx."urating_votecalc");
+
+        $db->query_write("
+            INSERT INTO ".$db->prefix."urating_voting (
+                ownerModule, ownerType, ownerid, 
+                voteCount, voteUpCount, voteAbstainCount, voteDownCount,
+                voting, votingUp, votingDown, votingDate
+            ) 
+            SELECT
+                ownerModule, ownerType, ownerid,
+                COUNT(*) as voteCount,
+                SUM(IF(vote>0,1,0)) AS voteUpCount,
+                SUM(IF(vote=0,1,0)) AS voteAbstainCount,
+                SUM(IF(vote<0,1,0)) AS voteDownCount,
+                
+                SUM(vote) as voting,
+                SUM(IF(vote>0,vote,0)) AS votingUp,
+                SUM(IF(vote<0,vote,0)) AS votingDown,
+                MAX(voteDate) as votingDate
+            FROM ".$db->prefix."urating_vote v
+			GROUP BY ownerModule, ownerType, ownerid
+        ");
     }
 
     $db->query_write("

@@ -4,10 +4,12 @@
   "fields": {
     "module": {
       "type": "string",
+      "dbField": "ownerModule",
       "json": "m"
     },
     "type": {
       "type": "string",
+      "dbField": "ownerType",
       "json": "t"
     },
     "votingPeriod": {

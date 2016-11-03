@@ -59,32 +59,6 @@ class URatingQuery {
 			 )
 		";
         $db->query_write($sql);
-
-        /*
-        $sql = "
-            INSERT INTO ".$db->prefix."urating_voting
-                (ownerModule, ownerType, ownerid, voting, up, down, voteAmount, upddate) 
-            SELECT
-                ownerModule, ownerType, ownerid, 
-                (sum(up)-sum(down)) as voting,
-                sum(up) as up,
-                sum(down) as down,
-                count(*) as voteAmount,
-                ".TIMENOW." as upddate
-            FROM ".$db->prefix."urating_voting v
-            WHERE ownerModule='".bkstr($vars->module)."', 
-                AND ownerType='".bkstr($vars->type)."',
-                AND ownerid=".bkint($vars->ownerid)."
-			GROUP BY ownerModule, ownerType, ownerid
-			ON DUPLICATE KEY UPDATE
-			    voting=v.voting,
-			    up=v.up,
-			    down=v.down,
-			    voteAmount=v.voteAmount,
-			    upddate=".TIMENOW."
-		";
-        $db->query_write($sql);
-        /**/
     }
 
     public static function Voting(Ab_Database $db, URatingOwner $owner){
@@ -116,6 +90,42 @@ class URatingQuery {
             LIMIT 1
         ";
         return $db->query_first($sql);
+    }
+
+    public static function VotingUpdate(Ab_Database $db, URatingOwner $owner){
+        $sql = "
+            INSERT INTO ".$db->prefix."urating_voting (
+                ownerModule, ownerType, ownerid, 
+                voteCount, voteUpCount, voteAbstainCount, voteDownCount,
+                voting, votingUp, votingDown, votingDate
+            ) 
+            SELECT
+                ownerModule, ownerType, ownerid,
+                COUNT(*) as voteCount,
+                SUM(IF(vote>0,1,0)) AS voteUpCount,
+                SUM(IF(vote=0,1,0)) AS voteAbstainCount,
+                SUM(IF(vote<0,1,0)) AS voteDownCount,
+                
+                SUM(vote) as voting,
+                SUM(IF(vote>0,vote,0)) AS votingUp,
+                SUM(IF(vote<0,vote,0)) AS votingDown,
+                MAX(voteDate) as votingDate
+            FROM ".$db->prefix."urating_vote v
+            WHERE ownerModule='".bkstr($owner->module)."', 
+                AND ownerType='".bkstr($owner->type)."',
+                AND ownerid=".bkint($owner->ownerid)."
+			GROUP BY ownerModule, ownerType, ownerid
+			ON DUPLICATE KEY UPDATE
+                voteCount=v.voteCount, 
+                voteUpCount=v.voteUpCount, 
+                voteAbstainCount=v.voteAbstainCount, 
+                voteDownCount=v.voteDownCount,
+                voting=v.voting, 
+                votingUp=v.votingUp, 
+                votingDown=v.votingDown, 
+                votingDate=v.votingDate
+        ";
+        $db->query_write($sql);
     }
 
     public static function OwnerConfigList(Ab_Database $db){

@@ -169,10 +169,18 @@ class URatingApp extends AbricosApplication {
 
         $d = URatingQuery::Voting($this->db, $owner);
 
-        /** @var URatingVoting $ret */
-        $ret = $this->InstanceClass('Voting', $d);
+        /** @var URatingVoting $voting */
+        $voting = $this->InstanceClass('Voting', $d);
+        if ($voting->id === 0){
+            $voting->module = $owner->module;
+            $voting->type = $owner->type;
+            $voting->ownerid = $owner->ownerid;
+        }
 
-        return $ret;
+        $voting->vote = $this->InstanceClass('Vote', $d);
+        $voting->config = $this->OwnerConfig($owner->module, $owner->type);
+
+        return $voting;
     }
 
     public function ToVoteToJSON($d){
@@ -235,7 +243,7 @@ class URatingApp extends AbricosApplication {
         return $ret;
     }
 
-    public function VotingHTML($module, $type, $ownerid){
+    public function VotingHTML(URatingVoting $voting){
         if ($this->CacheExists('brick', 'vote')){
             $brick = $this->Cache('brick', 'vote');
         } else {
@@ -251,10 +259,10 @@ class URatingApp extends AbricosApplication {
                 "val" => 0 ? "—" : 0
             )),
             'bdown' => $v['bdown'],
-            'module' => $module,
-            'type' => $type,
-            'nodeid' => $brick->id.'-'.$ownerid,
-            'id' => $ownerid,
+            'module' => $voting->module,
+            'type' => $voting->type,
+            'nodeid' => $brick->id.'-'.$voting->ownerid,
+            'id' => $voting->ownerid,
             'value' => 10,
             'vote' => 20
         ));
