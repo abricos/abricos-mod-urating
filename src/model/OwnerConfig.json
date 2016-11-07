@@ -2,6 +2,10 @@
   "version": "0.1.0",
   "type": "model",
   "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "configid"
+    },
     "module": {
       "type": "string",
       "dbField": "ownerModule",

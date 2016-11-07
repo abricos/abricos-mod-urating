@@ -33,4 +33,22 @@ class URatingManager extends Ab_ModuleManager {
     public function GetAppClassName(){
         return 'URatingApp';
     }
+
+    public function AJAX($d){
+        return $this->GetApp()->AJAX($d);
+    }
+
+    public function Bos_MenuData(){
+        $i18n = $this->module->I18n();
+        return array(
+            array(
+                "name" => "urating",
+                "title" => $i18n->Translate('title'),
+                "role" => NotifyAction::ADMIN,
+                "icon" => "/modules/urating/images/logo-96x96.png",
+                "url" => "urating/wspace/ws/",
+                "parent" => "controlPanel"
+            )
+        );
+    }
 }

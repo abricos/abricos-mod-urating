@@ -26,19 +26,24 @@ class URatingApp extends AbricosApplication {
             'VotingList' => 'URatingVotingList',
             'ToVote' => 'URatingToVote',
             'Owner' => 'URatingOwner',
+            'Config' => 'URatingConfig',
             'OwnerConfig' => 'URatingOwnerConfig',
             'OwnerConfigList' => 'URatingOwnerConfigList',
         );
     }
 
     protected function GetStructures(){
-        return '';
+        return 'Vote,Voting,Config,OwnerConfig';
     }
 
     public function ResponseToJSON($d){
         switch ($d->do){
             case 'toVote':
                 return $this->ToVoteToJSON($d->data);
+            case 'config':
+                return $this->ConfigToJSON();
+            case 'configSave':
+                return $this->ConfigSaveToJSON($d->data);
         }
         return null;
     }
@@ -101,9 +106,49 @@ class URatingApp extends AbricosApplication {
             $list->Add($this->InstanceClass('OwnerConfig', $d));
         }
 
+        if ($this->IsAdminRole()){
+            $modules = Abricos::$modules->RegisterAllModule();
+            foreach ($modules as $moduleName => $module){
+                if (!method_exists($module, 'URating_IsVoting') || !$module->URating_IsVoting()){
+                    continue;
+                }
+
+                $manager = $module->GetManager();
+                if (!method_exists($manager, 'URating_GetTypes')){
+                    continue;
+                }
+                $types = explode(",", $manager->URating_GetTypes());
+                foreach ($types as $type){
+                    $config = $list->GetByOwner($moduleName, $type);
+                    if ($config->id === 0){
+                        $this->OwnerConfigSetDefault($config);
+                        $list->Add($config);
+                    }
+                }
+            }
+        }
+
+
         $this->SetCache('OwnerConfig', $list);
 
         return $list;
+    }
+
+    private function OwnerConfigSetDefault(URatingOwnerConfig $config){
+        $manager = Abricos::GetModuleManager($config->module);
+        if (method_exists($manager, 'URating_GetDefaultConfig')){
+            $def = $manager->URating_GetDefaultConfig($config->type);
+
+            if (isset($def['votingPeriod'])){
+                $config->votingPeriod = intval($def['votingPeriod']);
+            }
+        }
+
+        $configid = URatingQuery::OwnerConfigSave($this->db, $config);
+        if ($config->id === 0){
+            $config->id = $configid;
+        }
+        return $config;
     }
 
     /**
@@ -119,9 +164,54 @@ class URatingApp extends AbricosApplication {
             return $config;
         }
 
-        $config->id = URatingQuery::OwnerConfigSave($this->db, $config);
+        $this->OwnerConfigSetDefault($config);
+        $list->Add($config);
 
         return $config;
+    }
+
+    public function ConfigToJSON(){
+        $ret = $this->Config();
+        return $this->ResultToJSON('config', $ret);
+    }
+
+    /**
+     * @return URatingConfig
+     */
+    public function Config(){
+        if ($this->CacheExists('Config')){
+            return $this->Cache('Config');
+        }
+
+        /** @var URatingConfig $config */
+        $config = $this->InstanceClass('Config');
+
+        $config->ownerList = $this->OwnerConfigList();
+
+        $this->SetCache('Config', $config);
+
+        return $config;
+    }
+
+    public function ConfigSaveToJSON($d){
+        $ret = $this->ConfigSave($d);
+        return $this->ResultToJSON('configSave', $ret);
+    }
+
+    public function ConfigSave($d){
+        if (!$this->IsAdminRole()){
+            return AbricosResponse::ERR_FORBIDDEN;
+        }
+
+        $config = $this->Config();
+        for ($i = 0; $i < count($d->owners); $i++){
+            $di = $d->owners[$i];
+            $ownerConfig = $config->ownerList->Get($di->ownerid);
+            $ownerConfig->votingPeriod = intval($di->votingPeriod);
+
+            URatingQuery::OwnerConfigSave($this->db, $ownerConfig);
+        }
+        return $this->Config();
     }
 
     /**
@@ -252,20 +342,36 @@ class URatingApp extends AbricosApplication {
         }
 
         $v = &$brick->param->var;
+        $vote = $voting->vote;
 
-        return Brick::ReplaceVarByData($brick->content, array(
-            'bup' => $v['bup'],
-            'bval' => Brick::ReplaceVarByData($v['bval'], array(
-                "val" => 0 ? "—" : 0
-            )),
-            'bdown' => $v['bdown'],
+        $replace = array(
+            'status' => 'ro',
             'module' => $voting->module,
             'type' => $voting->type,
             'nodeid' => $brick->id.'-'.$voting->ownerid,
             'id' => $voting->ownerid,
-            'value' => 10,
-            'vote' => 20
-        ));
+            'bup' => $v['guestUp'],
+            'bval' => $v['guestVal'],
+            'bdown' => $v['guestDown'],
+        );
+
+        if ($voting->IsFinished()){
+
+        }
+
+        if ($voting->IsVoting()){
+            $status = 'w';
+        } else if (!$vote->IsEmpty()){
+            if ($vote->vote > 0){
+                $status = 'up';
+            } else if ($vote->vote < 0){
+                $status = 'down';
+            } else {
+                $status = 'abstain';
+            }
+        }
+
+        return Brick::ReplaceVarByData($brick->content, $replace);
     }
 
     ////////////////////////////////////////////////////////////

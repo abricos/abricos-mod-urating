@@ -1,0 +1,10 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "ownerList": {
+      "type": "modelList:OwnerConfigList",
+      "rolefn": "IsAdminRole"
+    }
+  }
+}

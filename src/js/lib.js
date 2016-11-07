@@ -25,11 +25,25 @@ Component.entryPoint = function(NS){
     }, [], {
         APPS: {},
         ATTRS: {
-            isLoadAppStructure: {value: false},
+            isLoadAppStructure: {value: true},
+            Config: {value: NS.Config},
+            OwnerConfig: {value: NS.OwnerConfig},
+            OwnerConfigList: {value: NS.OwnerConfigList},
         },
-        REQS: {},
+        REQS: {
+            config: {
+                attribute: true,
+                type: 'model:Config'
+            },
+            configSave: {
+                args: ['data']
+            }
+        },
         URLS: {
             ws: "#app={C#MODNAMEURI}/wspace/ws/",
+            config: function(){
+                return this.getURL('ws') + 'config/ConfigWidget/';
+            }
         }
     });
 };

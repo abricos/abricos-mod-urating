@@ -1,0 +1,52 @@
+<!--{widget}-->
+<div class="config panel panel-default">
+    <div class="panel-heading text-center">
+
+        <h3 class="panel-title pull-left">Настройка модуля</h3>
+
+        <span data-wait="show">
+            <img src="/images/loading.gif"/> Загрузка...
+        </span>
+
+        <div class="clearfix"></div>
+    </div>
+    <div class="panel-body">
+        <div id="{i#list}"></div>
+    </div>
+    <div class="panel-footer text-center">
+        <div class="btn-toolbar pull-right">
+            <button data-click="this:save" class="btn btn-default">
+                Сохранить
+            </button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+</div>
+
+<!--{list}-->
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        <th>Модуль</th>
+        <th>Элемент</th>
+        <th>Период голосования, сек.</th>
+    </tr>
+    </thead>
+    <tbody>
+    {v#rows}
+    </tbody>
+</table>
+
+<!--{row}-->
+<tr>
+    <td>
+        {v#module}
+    </td>
+    <td>{v#type}</td>
+    <td>
+        <input id="{i#votingPeriod}-{v#id}" value="{v#votingPeriod}"
+               type="text" class="form-control input-sm"
+               data-wait="disable">
+    </td>
+</tr>

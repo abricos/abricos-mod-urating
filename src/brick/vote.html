@@ -2,6 +2,22 @@
 [mcss=urating]urating.css[/mcss]
 [mjs=urating]ui.js[/mjs]
 
+[bkvar=guestUp]
+	<div class="bup"
+	    title="Голосовать могут только зарегистрированные пользователи"></div>
+[/bkvar]
+
+[bkvar=guestVal]
+	<div class="bval"
+	    title="Результат голосования виден только авторизованным пользователям">—</div>
+[/bkvar]
+
+[bkvar=guestDown]
+	<div class="bdown"
+	    title="Голосовать могут только зарегистрированные пользователи"></div>
+[/bkvar]
+
+
 [bkvar=bup]
 	<div class="bup"></div>
 [/bkvar]
@@ -14,10 +30,10 @@
 	<div class="bdown"></div>
 [/bkvar]
 
+
 [*]-->
-<div id="{v#nodeid}" class="aw-urating voting ro"
-     data-module="{v#module}" data-type="{v#type}"
-     data-id="{v#id}" data-value="" data-vote="{v#vote}">
+<div id="{v#nodeid}" class="aw-urating voting {v#status}"
+     data-module="{v#module}" data-type="{v#type}" data-id="{v#id}">
     {v#bup}
     {v#bval}
     {v#bdown}

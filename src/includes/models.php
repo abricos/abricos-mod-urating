@@ -109,9 +109,45 @@ class URatingVoting extends AbricosModel {
     /**
      * Дата создания (публикации и т.п.) элемента.
      * Необходима для ограничения голосования по времени
+     *
      * @var int
      */
     public $ownerDate = 0;
+
+    /**
+     * Голосование завершено
+     *
+     * @return bool
+     */
+    public function IsFinished(){
+        $vPeriod = $this->config->votingPeriod;
+        if ($vPeriod === 0){
+            return false;
+        }
+        return $this->ownerDate + $vPeriod < TIMENOW;
+    }
+
+    /**
+     * Разрешено ли голосовать текущему пользователю
+     *
+     * @return bool
+     */
+    public function IsVoting(){
+        if (!$this->vote->IsEmpty()){
+            return false;
+        }
+        $vPeriod = $this->config->votingPeriod;
+
+        if ($vPeriod === 0){
+            return true;
+        }
+
+        return $this->ownerDate + $vPeriod > TIMENOW;
+    }
+
+    public function IsShowResult(){
+        return !$this->IsVoting();
+    }
 }
 
 /**
@@ -234,4 +270,14 @@ class URatingOwnerConfigList extends AbricosModelList {
 
         return $config;
     }
+}
+
+/**
+ * Class URatingConfig
+ *
+ * @property URatingOwnerConfigList $ownerList
+ */
+class URatingConfig extends AbricosModel {
+    protected $_structModule = 'urating';
+    protected $_structName = 'Config';
 }
