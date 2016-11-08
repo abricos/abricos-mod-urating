@@ -157,6 +157,31 @@ class URatingVoting extends AbricosModel {
  * @method URatingVoting GetByIndex(int $i)
  */
 class URatingVotingList extends AbricosModelList {
+
+    private $_cacheVotings = array();
+
+    /**
+     * @param URatingVoting $item
+     */
+    public function Add($item){
+        if ($item->id > 0){
+            parent::Add($item);
+        }
+
+        $this->_cacheVotings[$item->ownerid] = $item;
+    }
+
+    /**
+     * @param int $ownerid
+     * @return URatingVoting
+     */
+    public function GetByOwnerId($ownerid){
+        $ownerid = intval($ownerid);
+        if (isset($this->_cacheVotings[$ownerid])){
+            return $this->_cacheVotings[$ownerid];
+        }
+        return null;
+    }
 }
 
 /**

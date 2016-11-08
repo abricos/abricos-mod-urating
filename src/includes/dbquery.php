@@ -92,6 +92,45 @@ class URatingQuery {
         return $db->query_first($sql);
     }
 
+    public static function VotingList(Ab_Database $db, $module, $type, $ownerids){
+        $count = count($ownerids);
+        if ($count === 0){
+            return null;
+        }
+
+        $wha = array();
+        for ($i = 0; $i < $count; $i++){
+            $wha[] = "r.ownerid=".intval($ownerids[$i]);
+        }
+
+        $userid = Abricos::$user->id;
+
+        if ($userid == 0){
+            $sql = "
+                SELECT r.*
+                FROM ".$db->prefix."urating_voting r
+                WHERE r.ownerModule='".bkstr($module)."' 
+                    AND r.ownerType='".bkstr($type)."'
+                    AND (".implode(" OR ", $wha).")
+            ";
+            return $db->query_read($sql);
+        }
+
+        $sql = "
+            SELECT r.*
+            FROM ".$db->prefix."urating_voting r
+            LEFT JOIN ".$db->prefix."urating_vote v
+                ON r.ownerModule=v.ownerModule
+                    AND r.ownerType=v.ownerType
+                    AND r.ownerid=v.ownerid
+                    AND v.userid=".intval($userid)."
+            WHERE r.ownerModule='".bkstr($module)."' 
+                AND r.ownerType='".bkstr($type)."' 
+                AND (".implode(" OR ", $wha).")
+        ";
+        return $db->query_read($sql);
+    }
+
     public static function VotingUpdate(Ab_Database $db, URatingOwner $owner){
         $sql = "
             INSERT INTO ".$db->prefix."urating_voting (
