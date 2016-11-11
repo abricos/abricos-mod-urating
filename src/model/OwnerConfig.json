@@ -19,6 +19,10 @@
     "votingPeriod": {
       "type": "int",
       "json": "vp"
+    },
+    "showResult": {
+      "type": "bool",
+      "json": "shrt"
     }
   }
 }

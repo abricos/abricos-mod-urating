@@ -179,12 +179,14 @@ class URatingQuery {
     public static function OwnerConfigSave(Ab_Database $db, URatingOwnerConfig $config){
         $sql = "
             INSERT INTO ".$db->prefix."urating_ownerConfig
-            (ownerModule, ownerType, votingPeriod) VALUES (
+            (ownerModule, ownerType, votingPeriod, showResult) VALUES (
                 '".bkstr($config->module)."', 
                 '".bkstr($config->type)."',
-                ".intval($config->votingPeriod)." 
+                ".intval($config->votingPeriod).",
+                ".intval($config->showResult)."
             ) ON DUPLICATE KEY UPDATE
-                votingPeriod=".intval($config->votingPeriod)."
+                votingPeriod=".intval($config->votingPeriod).",
+                showResult=".intval($config->showResult)."
         ";
         $db->query_write($sql);
         return $db->insert_id();

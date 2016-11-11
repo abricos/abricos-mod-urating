@@ -9,18 +9,45 @@ Component.entryPoint = function(NS){
         COMPONENT = this,
         SYS = Brick.mod.sys;
 
+    var UID = Brick.env.user.id | 0;
+
     NS.UIVotingWidget = Y.Base.create('uiVotingWidget', SYS.AppWidget, [], {
         onInitAppWidget: function(err, appInstance){
-            console.log(arguments);
+        },
+        voteUp: function(){
+            this.toVote('up');
+        },
+        voteAbstain: function(){
+            this.toVote('abstain');
+        },
+        voteDown: function(){
+            this.toVote('down');
+        },
+        toVote: function(action){
+            var vote = {
+                module: this.get('ownerModule'),
+                type: this.get('ownerType'),
+                ownerid: this.get('ownerid'),
+                action: action
+            };
+            this.get('appInstance').toVote(vote, function(){
+                console.log(arguments);
+            }, this);
         }
     }, {
         ATTRS: {
             component: {value: COMPONENT},
             useExistingWidget: {value: true},
+            ownerModule: {},
+            ownerType: {},
+            ownerid: {}
         }
     });
 
     var UIManager = function(){
+        if (UID === 0){
+            return;
+        }
         var instance = this;
         NS.initApp({
             initCallback: function(){
@@ -31,11 +58,19 @@ Component.entryPoint = function(NS){
     UIManager.prototype = {
         init: function(){
             Y.Node.all('.aw-urating.voting').each(function(node){
+                var ownerModule = node.getData('module'),
+                    ownerType = node.getData('type'),
+                    ownerid = node.getData('id') | 0;
+
+                if (!ownerModule || !ownerType || !ownerid){
+                    return;
+                }
+
                 new NS.UIVotingWidget({
                     srcNode: node,
-                    ownerModule: node.getData('module'),
-                    ownerType: node.getData('type'),
-                    ownerid: node.getData('id') | 0
+                    ownerModule: ownerModule,
+                    ownerType: ownerType,
+                    ownerid: ownerid
                 });
             }, this);
         }

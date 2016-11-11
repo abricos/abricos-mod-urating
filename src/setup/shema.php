@@ -40,7 +40,7 @@ if ($updateManager->isUpdate('0.2.0')){
             skillid int(10) unsigned NOT NULL auto_increment,
             
 			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
-			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT '',
+			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT '',
 			
 			skill int(7) NOT NULL DEFAULT 0 COMMENT '',
 			skillDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
@@ -55,7 +55,7 @@ if ($updateManager->isUpdate('0.2.0')){
         $db->query_write("
             CREATE TABLE IF NOT EXISTS ".$pfx."urating_modcalc (
                 `userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
-                `module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+                `module` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
                 `skill` int(7) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)',
                 `upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
                 UNIQUE KEY `modcalc` (`userid`, `module`)
@@ -97,8 +97,8 @@ if ($updateManager->isUpdate('0.2.0')){
         /* старая таблица
         $db->query_write("
             CREATE TABLE IF NOT EXISTS ".$pfx."urating_vote (
-                `module` varchar(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
-                `elementtype` varchar(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
+                `module` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+                `elementtype` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
                 `elementid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
                 `userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
                 `voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ЗА (возможно кол-во)',
@@ -116,8 +116,8 @@ if ($updateManager->isUpdate('0.2.0')){
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_vote (
             voteid int(10) unsigned NOT NULL auto_increment,
             
-			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
-			ownerType varchar(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
+			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			ownerid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
 			
 			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
@@ -156,8 +156,8 @@ if ($updateManager->isUpdate('0.2.0')){
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_voting (
             votingid int(10) unsigned NOT NULL auto_increment,
 
-			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
-			ownerType varchar(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
+			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			ownerid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
 			
             voteCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов',
@@ -204,10 +204,11 @@ if ($updateManager->isUpdate('0.2.0')){
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_ownerConfig (
             configid int(10) unsigned NOT NULL auto_increment,
 
-			ownerModule varchar(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
-			ownerType varchar(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
+			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
+			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			
 			votingPeriod int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Срок голосования в секундах',
+			showResult TINYINT(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Всегда показывать результат',
 
 			PRIMARY KEY (configid),
 			UNIQUE KEY config (ownerModule, ownerType)

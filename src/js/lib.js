@@ -31,6 +31,9 @@ Component.entryPoint = function(NS){
             OwnerConfigList: {value: NS.OwnerConfigList},
         },
         REQS: {
+            toVote: {
+                args: ['data']
+            },
             config: {
                 attribute: true,
                 type: 'model:Config'

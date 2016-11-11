@@ -142,6 +142,9 @@ class URatingApp extends AbricosApplication {
             if (isset($def['votingPeriod'])){
                 $config->votingPeriod = intval($def['votingPeriod']);
             }
+            if (isset($def['showResult'])){
+                $config->showResult = boolval($def['showResult']);
+            }
         }
 
         $configid = URatingQuery::OwnerConfigSave($this->db, $config);
@@ -208,6 +211,7 @@ class URatingApp extends AbricosApplication {
             $di = $d->owners[$i];
             $ownerConfig = $config->ownerList->Get($di->ownerid);
             $ownerConfig->votingPeriod = intval($di->votingPeriod);
+            $ownerConfig->showResult = intval($di->showResult);
 
             URatingQuery::OwnerConfigSave($this->db, $ownerConfig);
         }
@@ -337,7 +341,7 @@ class URatingApp extends AbricosApplication {
             case 'down':
                 $ret->down = 1;
                 break;
-            case 'refrain':
+            case 'abstain':
                 break;
             default :
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
@@ -348,7 +352,8 @@ class URatingApp extends AbricosApplication {
         }
 
         $owner = $this->Owner($vars->module, $vars->type, $vars->ownerid);
-        $vote = $this->Vote($owner);
+        $voting = $this->Voting($owner);
+        $vote = $voting->vote;
 
         if (!$vote->IsEmpty()){ // уже поставлен голос за этот элемент
             $ret->AddCode(URatingToVote::CODE_JUST_ONE_TIME);
@@ -398,7 +403,7 @@ class URatingApp extends AbricosApplication {
             'bdown' => $v['guestDown'],
         );
 
-        if ($voting->IsFinished()){
+        if ($voting->IsShowResult()){
             $sVoting = $voting->voting > 0 ? '+' : ($voting->voting < 0) ? '-' : '';
             $sVoting .= $voting->voting;
 

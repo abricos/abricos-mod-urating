@@ -31,6 +31,7 @@
         <th>Модуль</th>
         <th>Элемент</th>
         <th>Период голосования, сек.</th>
+        <th>Всегда показывать результат</th>
     </tr>
     </thead>
     <tbody>
@@ -48,5 +49,8 @@
         <input id="{i#votingPeriod}-{v#id}" value="{v#votingPeriod}"
                type="text" class="form-control input-sm"
                data-wait="disable">
+    </td>
+    <td class="text-center">
+        <input id="{i#showResult}-{v#id}" type="checkbox" data-wait="disable">
     </td>
 </tr>

@@ -88,6 +88,7 @@ class URatingVoteList extends AbricosModelList {
  * @property string $module
  * @property string $type
  * @property int $ownerid
+ * @property int $userid Пользователь объекта для голосования
  *
  * @property int $voteCount
  * @property int $voteUpCount
@@ -133,20 +134,29 @@ class URatingVoting extends AbricosModel {
      * @return bool
      */
     public function IsVoting(){
-        if (!$this->vote->IsEmpty()){
+        if ($this->IsFinished()
+            || !$this->vote->IsEmpty()
+        ){
             return false;
         }
-        $vPeriod = $this->config->votingPeriod;
 
-        if ($vPeriod === 0){
+        return Abricos::$user->id > 0;
+    }
+
+    /**
+     * Показать результат
+     *
+     * @return bool
+     */
+    public function IsShowResult(){
+        if ($this->config->showResult
+            || $this->IsFinished()
+            || !$this->vote->IsEmpty()
+        ){
             return true;
         }
 
-        return $this->ownerDate + $vPeriod > TIMENOW;
-    }
-
-    public function IsShowResult(){
-        return !$this->IsVoting();
+        return $this->userid > 0 && Abricos::$user->id === $this->userid;
     }
 }
 
@@ -241,6 +251,7 @@ class URatingOwnerList extends AbricosModelList {
  * @property string $type
  *
  * @property int $votingPeriod Разрешенный период голосования (0 - всегда)
+ * @property bool $showResult Показывать результат сразу
  */
 class URatingOwnerConfig extends AbricosModel {
     protected $_structModule = 'urating';

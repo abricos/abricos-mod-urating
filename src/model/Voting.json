@@ -16,6 +16,9 @@
     "ownerid": {
       "type": "int"
     },
+    "userid": {
+      "type": "int"
+    },
     "voteCount": {
       "type": "int"
     },
