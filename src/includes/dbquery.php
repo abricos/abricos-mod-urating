@@ -76,7 +76,7 @@ class URatingQuery {
 
         if ($userid == 0){
             $sql = "
-                SELECT r.*, v.*
+                SELECT r.*
                 FROM ".$db->prefix."urating_voting r
                 WHERE r.ownerModule='".bkstr($module)."' 
                     AND r.ownerType='".bkstr($type)."'
@@ -105,7 +105,7 @@ class URatingQuery {
             INSERT INTO ".$db->prefix."urating_voting (
                 ownerModule, ownerType, ownerid, 
                 voteCount, voteUpCount, voteAbstainCount, voteDownCount,
-                voting, votingUp, votingDown, votingDate
+                score, scoreUp, scoreDown, votingDate
             ) 
             SELECT
                 ownerModule, ownerType, ownerid,
@@ -114,9 +114,9 @@ class URatingQuery {
                 SUM(IF(vote=0,1,0)) AS voteAbstainCount,
                 SUM(IF(vote<0,1,0)) AS voteDownCount,
                 
-                SUM(vote) as voting,
-                SUM(IF(vote>0,vote,0)) AS votingUp,
-                SUM(IF(vote<0,vote,0)) AS votingDown,
+                SUM(vote) as score,
+                SUM(IF(vote>0,vote,0)) AS scoreUp,
+                SUM(IF(vote<0,vote,0)) AS scoreDown,
                 MAX(voteDate) as votingDate
             FROM ".$db->prefix."urating_vote v
             WHERE ownerModule='".bkstr($owner->module)."', 
@@ -128,9 +128,9 @@ class URatingQuery {
                 voteUpCount=v.voteUpCount, 
                 voteAbstainCount=v.voteAbstainCount, 
                 voteDownCount=v.voteDownCount,
-                voting=v.voting, 
-                votingUp=v.votingUp, 
-                votingDown=v.votingDown, 
+                score=v.score, 
+                scoreUp=v.scoreUp, 
+                scoreDown=v.scoreDown, 
                 votingDate=v.votingDate
         ";
         $db->query_write($sql);
@@ -148,17 +148,19 @@ class URatingQuery {
     public static function OwnerConfigSave(Ab_Database $db, URatingOwnerConfig $config){
         $sql = "
             INSERT INTO ".$db->prefix."urating_ownerConfig (
-                ownerModule, ownerType, votingPeriod, showResult,
+                ownerModule, ownerType, minUserReputation, votingPeriod, showResult,
                 disableVotingUp, disableVotingAbstain, disableVotingDown
             ) VALUES (
                 '".bkstr($config->module)."', 
                 '".bkstr($config->type)."',
+                ".intval($config->minUserReputation).",
                 ".intval($config->votingPeriod).",
                 ".intval($config->showResult).",
                 ".intval($config->disableVotingUp).",
                 ".intval($config->disableVotingAbstain).",
                 ".intval($config->disableVotingDown)."
             ) ON DUPLICATE KEY UPDATE
+                minUserReputation=".intval($config->minUserReputation).",
                 votingPeriod=".intval($config->votingPeriod).",
                 showResult=".intval($config->showResult).",
                 disableVotingUp=".intval($config->disableVotingUp).",

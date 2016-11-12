@@ -38,6 +38,7 @@ Component.entryPoint = function(NS){
                     id: owner.get('id'),
                     module: owner.get('module'),
                     type: owner.get('type'),
+                    minUserReputation: owner.get('minUserReputation'),
                     votingPeriod: owner.get('votingPeriod'),
                     showResult: owner.get('showResult') ? 'checked' : '',
                     disableVotingUp: owner.get('disableVotingUp') ? 'checked' : '',
@@ -63,17 +64,23 @@ Component.entryPoint = function(NS){
 
             config.get('ownerList').each(function(owner){
                 var ownerid = owner.get('id'),
+                    minUserReputation = tp.getValue('row.minUserReputation-' + owner.get('id')) | 0,
                     votingPeriod = tp.getValue('row.votingPeriod-' + owner.get('id')) | 0,
                     showResult = tp.getValue('row.showResult-' + owner.get('id')),
                     disableVotingUp = tp.getValue('row.disableVotingUp-' + owner.get('id')),
                     disableVotingAbstain = tp.getValue('row.disableVotingAbstain-' + owner.get('id')),
                     disableVotingDown = tp.getValue('row.disableVotingDown-' + owner.get('id'));
 
+                owner.set('minUserReputation', minUserReputation);
                 owner.set('votingPeriod', votingPeriod);
                 owner.set('showResult', showResult);
+                owner.set('disableVotingUp', disableVotingUp);
+                owner.set('disableVotingAbstain', disableVotingAbstain);
+                owner.set('disableVotingDown', disableVotingDown);
 
                 sd.owners[sd.owners.length] = {
                     ownerid: ownerid,
+                    minUserReputation: minUserReputation,
                     votingPeriod: votingPeriod,
                     showResult: showResult,
                     disableVotingUp: disableVotingUp,

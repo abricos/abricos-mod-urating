@@ -16,6 +16,10 @@
       "dbField": "ownerType",
       "json": "t"
     },
+    "minUserReputation": {
+      "type": "int",
+      "json": "mur"
+    },
     "votingPeriod": {
       "type": "int",
       "json": "vpd"

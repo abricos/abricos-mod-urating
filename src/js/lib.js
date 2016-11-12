@@ -18,14 +18,16 @@ Component.entryPoint = function(NS){
 
     SYS.Application.build(COMPONENT, {}, {
         initializer: function(){
-            NS.roles.load(function(){
-                this.initCallbackFire();
+            this.appStructure(function(){
+                NS.roles.load(function(){
+                    this.initCallbackFire();
+                }, this);
             }, this);
         }
     }, [], {
         APPS: {},
         ATTRS: {
-            isLoadAppStructure: {value: true},
+            isLoadAppStructure: {value: false},
             Config: {value: NS.Config},
             OwnerConfig: {value: NS.OwnerConfig},
             OwnerConfigList: {value: NS.OwnerConfigList},

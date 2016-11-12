@@ -28,13 +28,13 @@
     "voteDownCount": {
       "type": "int"
     },
-    "voting": {
+    "score": {
       "type": "int"
     },
-    "votingUp": {
+    "scoreUp": {
       "type": "int"
     },
-    "votingDown": {
+    "scoreDown": {
       "type": "int"
     },
     "votingDate": {

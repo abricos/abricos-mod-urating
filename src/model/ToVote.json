@@ -20,8 +20,8 @@
   },
   "codes": {
     "OK": 1,
-    "JUST_ONE_TIME": 2,
-    "EXTEND_ERROR": 4
+    "IS_FINISHED": 2,
+    "JUST_ONE_TIME": 4
   },
   "fields": {
     "up": {

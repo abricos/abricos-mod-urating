@@ -165,9 +165,9 @@ if ($updateManager->isUpdate('0.2.0')){
 			voteAbstainCount int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всего воздержалось',
 			voteDownCount int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всего голосов ПРОТИВ',
 
-			voting int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
-			votingUp int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Результат ЗА',
-			votingDown int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Результат ПРОТИВ',
+			score int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
+			scoreUp int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Результат ЗА',
+			scoreDown int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Результат ПРОТИВ',
 			votingDate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 
 			PRIMARY KEY (votingid),
@@ -182,7 +182,7 @@ if ($updateManager->isUpdate('0.2.0')){
             INSERT INTO ".$db->prefix."urating_voting (
                 ownerModule, ownerType, ownerid, 
                 voteCount, voteUpCount, voteAbstainCount, voteDownCount,
-                voting, votingUp, votingDown, votingDate
+                score, scoreUp, scoreDown, votingDate
             ) 
             SELECT
                 ownerModule, ownerType, ownerid,
@@ -191,9 +191,9 @@ if ($updateManager->isUpdate('0.2.0')){
                 SUM(IF(vote=0,1,0)) AS voteAbstainCount,
                 SUM(IF(vote<0,1,0)) AS voteDownCount,
                 
-                SUM(vote) as voting,
-                SUM(IF(vote>0,vote,0)) AS votingUp,
-                SUM(IF(vote<0,vote,0)) AS votingDown,
+                SUM(vote) as score,
+                SUM(IF(vote>0,vote,0)) AS scoreUp,
+                SUM(IF(vote<0,vote,0)) AS scoreDown,
                 MAX(voteDate) as votingDate
             FROM ".$db->prefix."urating_vote v
 			GROUP BY ownerModule, ownerType, ownerid
@@ -207,8 +207,11 @@ if ($updateManager->isUpdate('0.2.0')){
 			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			
+            minUserReputation int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Минимальная репутация пользователя',
+
 			votingPeriod int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Срок голосования в секундах',
 			showResult TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всегда показывать результат',
+
 			disableVotingUp TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Запрещено голосовать ЗА',
 			disableVotingAbstain TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Запрещено воздерживаться',
 			disableVotingDown TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Запрещено голосовать ПРОТИВ',

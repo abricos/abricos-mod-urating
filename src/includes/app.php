@@ -16,10 +16,6 @@ class URatingApp extends AbricosApplication {
 
     protected function GetClasses(){
         return array(
-            'Reputation' => 'URatingReputation',
-            'ReputationList' => 'URatingReputationList',
-            'Skill' => 'URatingSkill',
-            'SkillList' => 'URatingSkillList',
             'Vote' => 'URatingVote',
             'VoteList' => 'URatingVoteList',
             'Voting' => 'URatingVoting',
@@ -58,17 +54,6 @@ class URatingApp extends AbricosApplication {
 
     public function IsViewRole(){
         return $this->manager->IsViewRole();
-    }
-
-    private function OwnerAppFunctionExist($module, $fn){
-        $ownerApp = Abricos::GetApp($module);
-        if (empty($ownerApp)){
-            return false;
-        }
-        if (!method_exists($ownerApp, $fn)){
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -138,6 +123,9 @@ class URatingApp extends AbricosApplication {
         if (method_exists($manager, 'URating_GetDefaultConfig')){
             $def = $manager->URating_GetDefaultConfig($config->type);
 
+            if (isset($def['minUserReputation'])){
+                $config->minUserReputation = intval($def['minUserReputation']);
+            }
             if (isset($def['votingPeriod'])){
                 $config->votingPeriod = intval($def['votingPeriod']);
             }
@@ -218,32 +206,16 @@ class URatingApp extends AbricosApplication {
         for ($i = 0; $i < count($d->owners); $i++){
             $di = $d->owners[$i];
             $ownerConfig = $config->ownerList->Get($di->ownerid);
-            $ownerConfig->votingPeriod = intval($di->votingPeriod);
-            $ownerConfig->showResult = intval($di->showResult);
+            $ownerConfig->minUserReputation = $di->minUserReputation;
+            $ownerConfig->votingPeriod = $di->votingPeriod;
+            $ownerConfig->showResult = $di->showResult;
+            $ownerConfig->disableVotingUp = $di->disableVotingUp;
+            $ownerConfig->disableVotingAbstain = $di->disableVotingAbstain;
+            $ownerConfig->disableVotingDown = $di->disableVotingDown;
 
             URatingQuery::OwnerConfigSave($this->db, $ownerConfig);
         }
         return $this->Config();
-    }
-
-    /**
-     * @return URatingReputation
-     */
-    public function Reputation(){
-        $userid = Abricos::$user->id;
-
-        if ($this->CacheExists('Rep', $userid)){
-            return $this->Cache('Rep', $userid);
-        }
-
-        $d = URatingQuery::Reputation($this->db);
-
-        /** @var URatingReputation $ret */
-        $ret = $this->InstanceClass('Reputation', $d);
-
-        $this->SetCache('Rep', $userid, $ret);
-
-        return $ret;
     }
 
     /**
@@ -347,12 +319,36 @@ class URatingApp extends AbricosApplication {
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
         }
 
-        if (!$this->OwnerAppFunctionExist($vars->module, 'URating_IsVoting')){
+        $ownerModule = Abricos::GetModule($vars->module);
+
+        if (empty($ownerModule)
+            || !method_exists($ownerModule, 'URating_IsVoting')
+            || !$ownerModule->URating_IsVoting()
+        ){
             return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
         }
 
         $owner = $this->Owner($vars->module, $vars->type, $vars->ownerid);
         $voting = $this->Voting($owner);
+
+        if ($voting->config->minUserReputation > 0){
+            /** @var UProfileApp $uprofileApp */
+            $uprofileApp = Abricos::GetApp('uprofile');
+            $userProfile = $uprofileApp->Profile(Abricos::$user->id);
+
+            if ($userProfile->voting->score < $voting->config->minUserReputation){
+                return $ret->SetError(
+                    AbricosResponse::ERR_BAD_REQUEST,
+                    URatingToVote::CODE_ENOUGH_REPUTATION
+                );
+            }
+        }
+
+        if ($voting->IsFinished()){
+            $ret->AddCode(URatingToVote::CODE_IS_FINISHED);
+            return $ret;
+        }
+
         $vote = $voting->vote;
 
         if (!$vote->IsEmpty()){ // уже поставлен голос за этот элемент
@@ -360,7 +356,6 @@ class URatingApp extends AbricosApplication {
             return $ret;
         }
 
-        $rep = $this->Reputation();
 
         // Можно ли ставить голос текущему пользователю за этот элемент
         // Нужно спросить сам модуль
@@ -375,7 +370,6 @@ class URatingApp extends AbricosApplication {
 
         $ret->AddCode(URatingToVote::CODE_OK);
 
-        $ret->vote = $this->Vote($owner);
         $ret->voting = $this->Voting($owner);
 
         return $ret;
@@ -391,7 +385,7 @@ class URatingApp extends AbricosApplication {
 
         $v = &$brick->param->var;
         $vote = $voting->vote;
-        $score = $voting->voting;
+        $score = $voting->score;
 
         $replace = array(
             'status' => 'ro',

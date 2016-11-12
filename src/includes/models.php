@@ -8,53 +8,6 @@
  */
 
 /**
- * Class URating
- *
- * @property int $id User ID
- * @property int $voting
- * @property int $votingDate
- * @property int $skill
- * @property int $skillDate
- * @property int $up
- * @property int $down
- * @property int $amount
- */
-class URatingReputation extends AbricosModel {
-    protected $_structModule = 'urating';
-    protected $_structName = 'URating';
-}
-
-/**
- * Class URatingList
- *
- * @method URatingReputation Get(int $userid)
- * @method URatingReputation GetByIndex(int $i)
- */
-class URatingReputationList extends AbricosModelList {
-}
-
-/**
- * Class URatingSkill
- *
- * @property int $userid
- * @property string $module
- * @property int $skill
- */
-class URatingSkill extends AbricosModel {
-    protected $_structModule = 'urating';
-    protected $_structName = 'Skill';
-}
-
-/**
- * Class URatingSkillList
- *
- * @method URatingSkill Get(int $id)
- * @method URatingSkill GetByIndex(int $i)
- */
-class URatingSkillList extends AbricosModelList {
-}
-
-/**
  * Class URatingVote
  *
  * @property string $module
@@ -95,9 +48,9 @@ class URatingVoteList extends AbricosModelList {
  * @property int $voteAbstainCount
  * @property int $voteDownCount
  *
- * @property int $voting
- * @property int $votingUp
- * @property int $votingDown
+ * @property int $score
+ * @property int $scoreUp
+ * @property int $scoreDown
  * @property int $votingDate
  *
  * @property URatingVote $vote
@@ -106,6 +59,11 @@ class URatingVoteList extends AbricosModelList {
 class URatingVoting extends AbricosModel {
     protected $_structModule = 'urating';
     protected $_structName = 'Voting';
+
+    /**
+     * @deprecated
+     */
+    private $voting;
 
     /**
      * Дата создания (публикации и т.п.) элемента.
@@ -216,8 +174,21 @@ interface URatingToVoteVars {
  */
 class URatingToVote extends AbricosResponse {
     const CODE_OK = 1;
-    const CODE_JUST_ONE_TIME = 2;
-    const CODE_EXTEND_ERROR = 4;
+
+    /**
+     * Недостаточно репутации для голосования
+     */
+    const CODE_ENOUGH_REPUTATION = 2;
+
+    /**
+     * Голосование завершено
+     */
+    const CODE_IS_FINISHED = 4;
+
+    /**
+     * Нельзя голосовать повторно
+     */
+    const CODE_JUST_ONE_TIME = 8;
 
     protected $_structModule = 'urating';
     protected $_structName = 'ToVote';
@@ -250,6 +221,7 @@ class URatingOwnerList extends AbricosModelList {
  * @property string $module
  * @property string $type
  *
+ * @property int $minUserReputation Минимальный рейтинг пользователя для возможности голосовать
  * @property int $votingPeriod Разрешенный период голосования (0 - всегда)
  * @property bool $showResult Показывать результат сразу
  * @property bool $disableVotingUp Запретить голосовать ЗА
