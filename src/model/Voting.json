@@ -3,7 +3,7 @@
   "fields": {
     "id": {
       "type": "int",
-      "dbField": "voteid"
+      "dbField": "votingid"
     },
     "module": {
       "type": "string",

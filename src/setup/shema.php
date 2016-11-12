@@ -23,10 +23,10 @@ if ($updateManager->isUpdate('0.2.0')){
     // рейтинг пользователя
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating (
-			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
+			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 
             skill int(10) NOT NULL DEFAULT 0 COMMENT '',
-			skillDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+			skillDate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 
 			UNIQUE KEY userid (userid),
 			KEY (skill)
@@ -37,13 +37,13 @@ if ($updateManager->isUpdate('0.2.0')){
     // например: uprofile (добавил фотку +10, о себе +10 и т.п.)
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_skill (
-            skillid int(10) unsigned NOT NULL auto_increment,
+            skillid int(10) UNSIGNED NOT NULL auto_increment,
             
-			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
+			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT '',
 			
 			skill int(7) NOT NULL DEFAULT 0 COMMENT '',
-			skillDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+			skillDate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 			
 			PRIMARY KEY (skillid),
 			UNIQUE KEY skill (userid, ownerModule)
@@ -54,10 +54,10 @@ if ($updateManager->isUpdate('0.2.0')){
         /* старая таблица
         $db->query_write("
             CREATE TABLE IF NOT EXISTS ".$pfx."urating_modcalc (
-                `userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
+                `userid` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
                 `module` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
                 `skill` int(7) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)',
-                `upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+                `upddate` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
                 UNIQUE KEY `modcalc` (`userid`, `module`)
             )".$charset
         );/**/
@@ -74,14 +74,14 @@ if ($updateManager->isUpdate('0.2.0')){
         /* старая таблица
         $db->query_write("
             CREATE TABLE IF NOT EXISTS ".$pfx."urating_user (
-                `userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
+                `userid` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
                 `reputation` int(10) NOT NULL DEFAULT 0 COMMENT 'Репутация пользователя',
-                `voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ЗА пользователя',
-                `votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'ПРОТИВ пользователя',
-                `votecount` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Кол-во голосов за репутацию',
-                `votedate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета репутации',
+                `voteup` int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'ЗА пользователя',
+                `votedown` int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'ПРОТИВ пользователя',
+                `votecount` int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Кол-во голосов за репутацию',
+                `votedate` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета репутации',
                 `skill` int(10) NOT NULL DEFAULT 0 COMMENT 'Рейтинг (сила)',
-                `upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+                `upddate` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
                 UNIQUE KEY `user` (`userid`), KEY (`reputation`), KEY (`skill`)
             )".$charset
         );/**/
@@ -99,11 +99,11 @@ if ($updateManager->isUpdate('0.2.0')){
             CREATE TABLE IF NOT EXISTS ".$pfx."urating_vote (
                 `module` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
                 `elementtype` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
-                `elementid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
-                `userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
-                `voteup` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ЗА (возможно кол-во)',
-                `votedown` int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Голос ПРОТИВ (возможно кол-во)',
-                `dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
+                `elementid` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
+                `userid` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
+                `voteup` int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Голос ЗА (возможно кол-во)',
+                `votedown` int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Голос ПРОТИВ (возможно кол-во)',
+                `dateline` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
                 UNIQUE KEY `modvote` (`module`,`elementtype`,`elementid`,`userid`), KEY `userid` (`userid`), KEY `element` (`module`,`elementtype`,`elementid`)
             )".$charset
         );/**/
@@ -114,16 +114,16 @@ if ($updateManager->isUpdate('0.2.0')){
     // за пользователя будет ownerModule='uprofile', ownerType='user', ownerid='{userid}'
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_vote (
-            voteid int(10) unsigned NOT NULL auto_increment,
+            voteid int(10) UNSIGNED NOT NULL auto_increment,
             
 			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
-			ownerid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
+			ownerid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
 			
-			userid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
+			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Проголосовавший пользователь',
 			
 			vote int(5) NOT NULL DEFAULT 0 COMMENT 'Голос (возможно кол-во)',
-			voteDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
+			voteDate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата голоса',
 			
 			PRIMARY KEY (voteid),
 			UNIQUE KEY voteUser (ownerModule, ownerType, ownerid, userid),
@@ -154,21 +154,21 @@ if ($updateManager->isUpdate('0.2.0')){
     // результат голосования за объект в модуле
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_voting (
-            votingid int(10) unsigned NOT NULL auto_increment,
+            votingid int(10) UNSIGNED NOT NULL auto_increment,
 
 			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
-			ownerid int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
+			ownerid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Идентификатор элемента',
 			
-            voteCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов',
-			voteUpCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов ЗА',
-			voteAbstainCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего воздержалось',
-			voteDownCount int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Всего голосов ПРОТИВ',
+            voteCount int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всего голосов',
+			voteUpCount int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всего голосов ЗА',
+			voteAbstainCount int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всего воздержалось',
+			voteDownCount int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всего голосов ПРОТИВ',
 
 			voting int(10) NOT NULL DEFAULT 0 COMMENT 'Результат',
-			votingUp int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Результат ЗА',
-			votingDown int(5) unsigned NOT NULL DEFAULT 0 COMMENT 'Результат ПРОТИВ',
-			votingDate int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
+			votingUp int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Результат ЗА',
+			votingDown int(5) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Результат ПРОТИВ',
+			votingDate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата пересчета',
 
 			PRIMARY KEY (votingid),
 			UNIQUE KEY voting (ownerModule, ownerType, ownerid)
@@ -202,13 +202,16 @@ if ($updateManager->isUpdate('0.2.0')){
 
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."urating_ownerConfig (
-            configid int(10) unsigned NOT NULL auto_increment,
+            configid int(10) UNSIGNED NOT NULL auto_increment,
 
 			ownerModule VARCHAR(32) NOT NULL DEFAULT '' COMMENT 'Имя модуля',
 			ownerType VARCHAR(16) NOT NULL DEFAULT '' COMMENT 'Тип элемента в модуле',
 			
-			votingPeriod int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Срок голосования в секундах',
-			showResult TINYINT(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Всегда показывать результат',
+			votingPeriod int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Срок голосования в секундах',
+			showResult TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Всегда показывать результат',
+			disableVotingUp TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Запрещено голосовать ЗА',
+			disableVotingAbstain TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Запрещено воздерживаться',
+			disableVotingDown TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Запрещено голосовать ПРОТИВ',
 
 			PRIMARY KEY (configid),
 			UNIQUE KEY config (ownerModule, ownerType)

@@ -252,6 +252,9 @@ class URatingOwnerList extends AbricosModelList {
  *
  * @property int $votingPeriod Разрешенный период голосования (0 - всегда)
  * @property bool $showResult Показывать результат сразу
+ * @property bool $disableVotingUp Запретить голосовать ЗА
+ * @property bool $disableVotingAbstain Запретить воздерживаться
+ * @property bool $disableVotingDown Запретить голосовать ПРОТИВ
  */
 class URatingOwnerConfig extends AbricosModel {
     protected $_structModule = 'urating';

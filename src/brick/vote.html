@@ -18,14 +18,17 @@
 	    title="Голосовать могут только зарегистрированные пользователи"></div>
 [/v]
 
+[v=scoreUp]	<div class="bup"></div> [/v]
+
 [v=scoreVal]
 	<div class="bval"
 	    title="Общий рейтинг {v#voteCount}: ↑{v#voteUpCount} и ↓{v#voteDownCount}">{v#voting}</div>
 [/v]
 
+[v=scoreDown] <div class="bdown"></div> [/v]
+
 [v=up]
-	<div class="bup"
-	    data-click="this:voteUp"
+	<div class="bup" data-click="this:voteUp"
 	    title=""></div>
 [/v]
 
@@ -36,13 +39,12 @@
 [/v]
 
 [v=down]
-	<div class="bdown"
-	    data-click="this:voteDown"
+	<div class="bdown" data-click="this:voteDown"
 	    title=""></div>
 [/v]
 
 [*]-->
-<div id="{v#nodeid}" class="aw-urating voting {v#status}"
+<div id="{v#nodeid}" class="aw-urating voting {v#status} {v#scoreStatus}"
      data-module="{v#module}" data-type="{v#type}" data-id="{v#id}">
     {v#bup}
     {v#bval}

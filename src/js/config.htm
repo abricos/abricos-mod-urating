@@ -31,7 +31,10 @@
         <th>Модуль</th>
         <th>Элемент</th>
         <th>Период голосования, сек.</th>
-        <th>Всегда показывать результат</th>
+        <th class="text-center">Всегда показывать результат</th>
+        <th class="text-center">Запрет на <i class="fa fa-long-arrow-down"></i></th>
+        <th class="text-center">Запрет на <i class="fa fa-eye" aria-hidden="true"></i></th>
+        <th class="text-center">Запрет на <i class="fa fa-long-arrow-up"></i></th>
     </tr>
     </thead>
     <tbody>
@@ -51,6 +54,19 @@
                data-wait="disable">
     </td>
     <td class="text-center">
-        <input id="{i#showResult}-{v#id}" type="checkbox" data-wait="disable">
+        <input id="{i#showResult}-{v#id}" {v#showResult}
+               type="checkbox" data-wait="disable">
+    </td>
+    <td class="text-center">
+        <input id="{i#disableVotingUp}-{v#id}" {v#disableVotingUp}
+               type="checkbox" data-wait="disable">
+    </td>
+    <td class="text-center">
+        <input id="{i#disableVotingAbstain}-{v#id}" {v#disableVotingAbstain}
+               type="checkbox" data-wait="disable">
+    </td>
+    <td class="text-center">
+        <input id="{i#disableVotingDown}-{v#id}" {v#disableVotingDown}
+               type="checkbox" data-wait="disable">
     </td>
 </tr>

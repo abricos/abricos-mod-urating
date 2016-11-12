@@ -61,37 +61,6 @@ class URatingQuery {
         $db->query_write($sql);
     }
 
-    public static function Voting(Ab_Database $db, URatingOwner $owner){
-        $userid = Abricos::$user->id;
-
-        if ($userid == 0){
-            $sql = "
-                SELECT r.*
-                FROM ".$db->prefix."urating_voting r
-                WHERE r.ownerModule='".bkstr($owner->module)."' 
-                    AND r.ownerType='".bkstr($owner->type)."' 
-                    AND r.ownerid=".bkint($owner->ownerid)."
-                LIMIT 1
-            ";
-            return $db->query_first($sql);
-        }
-
-        $sql = "
-            SELECT r.*
-            FROM ".$db->prefix."urating_voting r
-            LEFT JOIN ".$db->prefix."urating_vote v
-                ON r.ownerModule=v.ownerModule
-                    AND r.ownerType=v.ownerType
-                    AND r.ownerid=v.ownerid
-                    AND v.userid=".intval($userid)."
-            WHERE r.ownerModule='".bkstr($owner->module)."' 
-                AND r.ownerType='".bkstr($owner->type)."' 
-                AND r.ownerid=".bkint($owner->ownerid)."
-            LIMIT 1
-        ";
-        return $db->query_first($sql);
-    }
-
     public static function VotingList(Ab_Database $db, $module, $type, $ownerids){
         $count = count($ownerids);
         if ($count === 0){
@@ -107,7 +76,7 @@ class URatingQuery {
 
         if ($userid == 0){
             $sql = "
-                SELECT r.*
+                SELECT r.*, v.*
                 FROM ".$db->prefix."urating_voting r
                 WHERE r.ownerModule='".bkstr($module)."' 
                     AND r.ownerType='".bkstr($type)."'
@@ -117,7 +86,7 @@ class URatingQuery {
         }
 
         $sql = "
-            SELECT r.*
+            SELECT r.*, v.*
             FROM ".$db->prefix."urating_voting r
             LEFT JOIN ".$db->prefix."urating_vote v
                 ON r.ownerModule=v.ownerModule
@@ -178,15 +147,23 @@ class URatingQuery {
 
     public static function OwnerConfigSave(Ab_Database $db, URatingOwnerConfig $config){
         $sql = "
-            INSERT INTO ".$db->prefix."urating_ownerConfig
-            (ownerModule, ownerType, votingPeriod, showResult) VALUES (
+            INSERT INTO ".$db->prefix."urating_ownerConfig (
+                ownerModule, ownerType, votingPeriod, showResult,
+                disableVotingUp, disableVotingAbstain, disableVotingDown
+            ) VALUES (
                 '".bkstr($config->module)."', 
                 '".bkstr($config->type)."',
                 ".intval($config->votingPeriod).",
-                ".intval($config->showResult)."
+                ".intval($config->showResult).",
+                ".intval($config->disableVotingUp).",
+                ".intval($config->disableVotingAbstain).",
+                ".intval($config->disableVotingDown)."
             ) ON DUPLICATE KEY UPDATE
                 votingPeriod=".intval($config->votingPeriod).",
-                showResult=".intval($config->showResult)."
+                showResult=".intval($config->showResult).",
+                disableVotingUp=".intval($config->disableVotingUp).",
+                disableVotingAbstain=".intval($config->disableVotingAbstain).",
+                disableVotingDown=".intval($config->disableVotingDown)."
         ";
         $db->query_write($sql);
         return $db->insert_id();

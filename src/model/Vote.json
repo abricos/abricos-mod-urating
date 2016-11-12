@@ -19,15 +19,11 @@
     "userid": {
       "type": "int"
     },
-    "up": {
+    "vote": {
       "type": "int"
     },
-    "down": {
-      "type": "int"
-    },
-    "dateline": {
-      "type": "int",
-      "rolefn": "IsAdminRole"
+    "voteDate": {
+      "type": "date"
     }
   }
 }

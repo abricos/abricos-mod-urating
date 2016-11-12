@@ -18,11 +18,23 @@
     },
     "votingPeriod": {
       "type": "int",
-      "json": "vp"
+      "json": "vpd"
     },
     "showResult": {
       "type": "bool",
       "json": "shrt"
+    },
+    "disableVotingUp": {
+      "type": "bool",
+      "json": "dvup"
+    },
+    "disableVotingAbstain": {
+      "type": "bool",
+      "json": "dvabn"
+    },
+    "disableVotingDown": {
+      "type": "bool",
+      "json": "dvdn"
     }
   }
 }

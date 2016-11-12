@@ -39,6 +39,10 @@ Component.entryPoint = function(NS){
                     module: owner.get('module'),
                     type: owner.get('type'),
                     votingPeriod: owner.get('votingPeriod'),
+                    showResult: owner.get('showResult') ? 'checked' : '',
+                    disableVotingUp: owner.get('disableVotingUp') ? 'checked' : '',
+                    disableVotingAbstain: owner.get('disableVotingAbstain') ? 'checked' : '',
+                    disableVotingDown: owner.get('disableVotingDown') ? 'checked' : '',
                 });
             });
             tp.gel('list').innerHTML = tp.replace('list', {
@@ -59,13 +63,22 @@ Component.entryPoint = function(NS){
 
             config.get('ownerList').each(function(owner){
                 var ownerid = owner.get('id'),
-                    votingPeriod = tp.getValue('row.votingPeriod-' + owner.get('id')) | 0;
+                    votingPeriod = tp.getValue('row.votingPeriod-' + owner.get('id')) | 0,
+                    showResult = tp.getValue('row.showResult-' + owner.get('id')),
+                    disableVotingUp = tp.getValue('row.disableVotingUp-' + owner.get('id')),
+                    disableVotingAbstain = tp.getValue('row.disableVotingAbstain-' + owner.get('id')),
+                    disableVotingDown = tp.getValue('row.disableVotingDown-' + owner.get('id'));
 
                 owner.set('votingPeriod', votingPeriod);
+                owner.set('showResult', showResult);
 
                 sd.owners[sd.owners.length] = {
                     ownerid: ownerid,
-                    votingPeriod: votingPeriod
+                    votingPeriod: votingPeriod,
+                    showResult: showResult,
+                    disableVotingUp: disableVotingUp,
+                    disableVotingAbstain: disableVotingAbstain,
+                    disableVotingDown: disableVotingDown,
                 };
             }, this);
 

@@ -128,7 +128,6 @@ class URatingApp extends AbricosApplication {
             }
         }
 
-
         $this->SetCache('OwnerConfig', $list);
 
         return $list;
@@ -143,7 +142,16 @@ class URatingApp extends AbricosApplication {
                 $config->votingPeriod = intval($def['votingPeriod']);
             }
             if (isset($def['showResult'])){
-                $config->showResult = boolval($def['showResult']);
+                $config->showResult = !!$def['showResult'];
+            }
+            if (isset($def['disableVotingUp'])){
+                $config->disableVotingUp = !!$def['disableVotingUp'];
+            }
+            if (isset($def['disableVotingAbstain'])){
+                $config->disableVotingAbstain = !!$def['disableVotingAbstain'];
+            }
+            if (isset($def['disableVotingUp'])){
+                $config->disableVotingDown = !!$def['disableVotingDown'];
             }
         }
 
@@ -261,20 +269,9 @@ class URatingApp extends AbricosApplication {
     public function Voting($module, $type = '', $ownerid = 0){
         $owner = $this->Owner($module, $type, $ownerid);
 
-        $d = URatingQuery::Voting($this->db, $owner);
+        $votingList = $this->VotingList($owner->module, $owner->type, array($owner->ownerid));
 
-        /** @var URatingVoting $voting */
-        $voting = $this->InstanceClass('Voting', $d);
-        if ($voting->id === 0){
-            $voting->module = $owner->module;
-            $voting->type = $owner->type;
-            $voting->ownerid = $owner->ownerid;
-        }
-
-        $voting->vote = $this->InstanceClass('Vote', $d);
-        $voting->config = $this->OwnerConfig($owner->module, $owner->type);
-
-        return $voting;
+        return $votingList->GetByIndex(0);
     }
 
     /**
@@ -305,15 +302,18 @@ class URatingApp extends AbricosApplication {
             if (!empty($voting)){
                 continue;
             }
+
             /** @var URatingVoting $voting */
             $voting = $this->InstanceClass('Voting', array(
                 "module" => $module,
                 "type" => $type,
-                "ownerid" => $ownerid
+                "ownerid" => $ownerid,
+                "votingid" => $list->Count() + 1
             ));
 
             $voting->vote = $this->InstanceClass('Vote', $d);
             $voting->config = $this->OwnerConfig($module, $type);
+
             $list->Add($voting);
         }
 
@@ -391,9 +391,11 @@ class URatingApp extends AbricosApplication {
 
         $v = &$brick->param->var;
         $vote = $voting->vote;
+        $score = $voting->voting;
 
         $replace = array(
             'status' => 'ro',
+            'scoreStatus' => '',
             'module' => $voting->module,
             'type' => $voting->type,
             'nodeid' => $brick->id.'-'.$voting->ownerid,
@@ -404,23 +406,32 @@ class URatingApp extends AbricosApplication {
         );
 
         if ($voting->IsShowResult()){
-            $sVoting = $voting->voting > 0 ? '+' : ($voting->voting < 0) ? '-' : '';
-            $sVoting .= $voting->voting;
+            $sScore = $score > 0 ? '+' : ($score < 0 ? '-' : '');
+            $sScore .= $score;
 
             $replace['bval'] = Brick::ReplaceVarByData($v['scoreVal'], array(
-                "voting" => $sVoting,
+                "voting" => $sScore,
                 "voteCount" => $voting->voteCount,
                 "voteUpCount" => $voting->voteUpCount,
                 "voteDownCount" => $voting->voteDownCount,
             ));
-        } else if (Abricos::$user->id > 0){
+            $replace['bup'] = $v['scoreUp'];
+            $replace['bdown'] = $v['scoreDown'];
+
+            $replace['scoreStatus']
+                = $vote->vote > 0 ? 'up' : ($vote->vote < 0 ? 'down' : '');
+        }
+
+        if ($voting->IsVoting()){
             $replace['status'] = 'w';
             $replace['bup'] = $v['up'];
             $replace['bdown'] = $v['down'];
 
-            $replace['bval'] = Brick::ReplaceVarByData($v['val'], array(
-                "voteCount" => $voting->voteCount
-            ));
+            if (!$voting->IsShowResult()){
+                $replace['bval'] = Brick::ReplaceVarByData($v['val'], array(
+                    "voteCount" => $voting->voteCount
+                ));
+            }
         }
 
         return Brick::ReplaceVarByData($brick->content, $replace);
