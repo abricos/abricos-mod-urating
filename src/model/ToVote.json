@@ -20,18 +20,14 @@
   },
   "codes": {
     "OK": 1,
-    "IS_FINISHED": 2,
-    "JUST_ONE_TIME": 4
+    "ENOUGH_REPUTATION": 2,
+    "IS_FINISHED": 4,
+    "JUST_ONE_TIME": 8,
+    "UNKNOWN": 16
   },
   "fields": {
-    "up": {
+    "voteValue": {
       "type": "int"
-    },
-    "down": {
-      "type": "int"
-    },
-    "vote": {
-      "type": "model:Vote"
     },
     "voting": {
       "type": "model:Voting"

@@ -167,9 +167,7 @@ interface URatingToVoteVars {
  * Class URatingToVote
  *
  * @property URatingToVoteVars $vars
- * @property int $up
- * @property int $down
- * @property URatingVote $vote
+ * @property int $voteValue
  * @property URatingVoting $voting
  */
 class URatingToVote extends AbricosResponse {
@@ -189,6 +187,11 @@ class URatingToVote extends AbricosResponse {
      * Нельзя голосовать повторно
      */
     const CODE_JUST_ONE_TIME = 8;
+
+    /**
+     * Неизвестная ошибка
+     */
+    const CODE_UNKNOWN = 16;
 
     protected $_structModule = 'urating';
     protected $_structName = 'ToVote';

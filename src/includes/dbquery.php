@@ -48,15 +48,17 @@ class URatingQuery {
 
         $sql = "
 			INSERT INTO ".$db->prefix."urating_vote
-			(ownerModule, ownerType, ownerid, userid, up, down, dateline) VALUES (
+			(ownerModule, ownerType, ownerid, userid, vote, voteDate) VALUES (
 				'".bkstr($vars->module)."', 
 				'".bkstr($vars->type)."',
 				".bkint($vars->ownerid).", 
 				".bkint(Abricos::$user->id).",
-				".bkint($toVote->up).",
-				".bkint($toVote->down).",
+				".bkint($toVote->voteValue).",
 				".TIMENOW."
-			 )
+			 ) 
+			 ON DUPLICATE KEY UPDATE
+				vote=".bkint($toVote->voteValue).",
+				voteDate=".TIMENOW."
 		";
         $db->query_write($sql);
     }
@@ -86,7 +88,12 @@ class URatingQuery {
         }
 
         $sql = "
-            SELECT r.*, v.*
+            SELECT 
+                r.*, 
+                v.voteid,
+                v.userid,
+                v.vote,
+                v.voteDate
             FROM ".$db->prefix."urating_voting r
             LEFT JOIN ".$db->prefix."urating_vote v
                 ON r.ownerModule=v.ownerModule
@@ -102,11 +109,6 @@ class URatingQuery {
 
     public static function VotingUpdate(Ab_Database $db, URatingOwner $owner){
         $sql = "
-            INSERT INTO ".$db->prefix."urating_voting (
-                ownerModule, ownerType, ownerid, 
-                voteCount, voteUpCount, voteAbstainCount, voteDownCount,
-                score, scoreUp, scoreDown, votingDate
-            ) 
             SELECT
                 ownerModule, ownerType, ownerid,
                 COUNT(*) as voteCount,
@@ -119,19 +121,44 @@ class URatingQuery {
                 SUM(IF(vote<0,vote,0)) AS scoreDown,
                 MAX(voteDate) as votingDate
             FROM ".$db->prefix."urating_vote v
-            WHERE ownerModule='".bkstr($owner->module)."', 
-                AND ownerType='".bkstr($owner->type)."',
-                AND ownerid=".bkint($owner->ownerid)."
-			GROUP BY ownerModule, ownerType, ownerid
-			ON DUPLICATE KEY UPDATE
-                voteCount=v.voteCount, 
-                voteUpCount=v.voteUpCount, 
-                voteAbstainCount=v.voteAbstainCount, 
-                voteDownCount=v.voteDownCount,
-                score=v.score, 
-                scoreUp=v.scoreUp, 
-                scoreDown=v.scoreDown, 
-                votingDate=v.votingDate
+            WHERE v.ownerModule='".bkstr($owner->module)."'
+                AND v.ownerType='".bkstr($owner->type)."'
+                AND v.ownerid=".bkint($owner->ownerid)."
+            
+        ";
+        $d = $db->query_first($sql);
+
+        if (empty($d)){
+            return;
+        }
+
+        $sql = "
+            INSERT INTO ".$db->prefix."urating_voting (
+                ownerModule, ownerType, ownerid, 
+                voteCount, voteUpCount, voteAbstainCount, voteDownCount,
+                score, scoreUp, scoreDown, votingDate
+            ) VALUES (
+                '".bkstr($d['ownerModule'])."',
+                '".bkstr($d['ownerType'])."',
+                ".intval($d['ownerid']).",
+                
+                ".intval($d['voteCount']).",
+                ".intval($d['voteUpCount']).",
+                ".intval($d['voteAbstainCount']).",
+                ".intval($d['voteDownCount']).",
+                ".intval($d['score']).",
+                ".intval($d['scoreUp']).",
+                ".intval($d['scoreDown']).",
+                ".intval($d['votingDate'])."
+            ) ON DUPLICATE KEY UPDATE
+                voteCount=".intval($d['voteCount']).",
+                voteUpCount=".intval($d['voteUpCount']).",
+                voteAbstainCount=".intval($d['voteAbstainCount']).",
+                voteDownCount=".intval($d['voteDownCount']).",
+                score=".intval($d['score']).",
+                scoreUp=".intval($d['scoreUp']).",
+                scoreDown=".intval($d['scoreDown']).",
+                votingDate=".intval($d['votingDate'])."
         ";
         $db->query_write($sql);
     }

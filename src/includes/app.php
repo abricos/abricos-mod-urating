@@ -308,12 +308,13 @@ class URatingApp extends AbricosApplication {
 
         switch ($vars->action){
             case 'up':
-                $ret->up = 1;
+                $ret->voteValue = 1;
                 break;
             case 'down':
-                $ret->down = 1;
+                $ret->voteValue = -1;
                 break;
             case 'abstain':
+                $ret->voteValue = 0;
                 break;
             default :
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
@@ -331,7 +332,39 @@ class URatingApp extends AbricosApplication {
         $owner = $this->Owner($vars->module, $vars->type, $vars->ownerid);
         $voting = $this->Voting($owner);
 
-        if ($voting->config->minUserReputation > 0){
+        // Есть ли доступ к сущности для голосования
+        $ownerApp = Abricos::GetApp($vars->module);
+        if (empty($ownerApp)
+            || !method_exists($ownerApp, 'URating_IsToVote')
+            || !$ownerApp->URating_IsToVote($owner, $voting)
+        ){
+            return $ret->SetError(
+                AbricosResponse::ERR_BAD_REQUEST,
+                URatingToVote::CODE_UNKNOWN
+            );
+        }
+
+        // Не закончилось ли голосование
+        if ($voting->config->votingPeriod > 0){
+            // в настройках указан период голосования
+
+            if (!method_exists($ownerApp, 'URating_GetOwnerDate')){
+                return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
+            }
+
+            $voting->ownerDate = $ownerApp->URating_GetOwnerDate($owner);
+
+            if ($voting->IsFinished()){
+                return $ret->SetError(
+                    AbricosResponse::ERR_BAD_REQUEST,
+                    URatingToVote::CODE_IS_FINISHED
+                );
+            }
+        }
+
+        if ($voting->config->minUserReputation > 0
+            && !$this->IsAdminRole() // админа это не касается
+        ){
             /** @var UProfileApp $uprofileApp */
             $uprofileApp = Abricos::GetApp('uprofile');
             $userProfile = $uprofileApp->Profile(Abricos::$user->id);
@@ -344,31 +377,22 @@ class URatingApp extends AbricosApplication {
             }
         }
 
-        if ($voting->IsFinished()){
-            $ret->AddCode(URatingToVote::CODE_IS_FINISHED);
-            return $ret;
-        }
-
         $vote = $voting->vote;
 
         if (!$vote->IsEmpty()){ // уже поставлен голос за этот элемент
-            $ret->AddCode(URatingToVote::CODE_JUST_ONE_TIME);
-            return $ret;
+            return $ret->SetError(
+                AbricosResponse::ERR_BAD_REQUEST,
+                URatingToVote::CODE_JUST_ONE_TIME
+            );
         }
 
-
-        // Можно ли ставить голос текущему пользователю за этот элемент
-        // Нужно спросить сам модуль
-
-        $ownerApp = Abricos::GetApp($vars->module);
-        if (!$ownerApp->URating_IsVoting($owner, $rep)){
-            return $ret->SetError(AbricosResponse::ERR_FORBIDDEN, URatingToVote::CODE_EXTEND_ERROR);
-        }
         // голосование за элемент разрешено модулем
+        $ret->AddCode(URatingToVote::CODE_OK);
 
         URatingQuery::VoteAppend($this->db, $ret);
+        URatingQuery::VotingUpdate($this->db, $owner);
 
-        $ret->AddCode(URatingToVote::CODE_OK);
+        $this->CacheClear();
 
         $ret->voting = $this->Voting($owner);
 

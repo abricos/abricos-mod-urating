@@ -28,6 +28,10 @@ Component.entryPoint = function(NS){
         APPS: {},
         ATTRS: {
             isLoadAppStructure: {value: false},
+            Voting: {value: NS.Voting},
+            VotingList: {value: NS.VotingList},
+            Vote: {value: NS.Vote},
+            VoteList: {value: NS.VoteList},
             Config: {value: NS.Config},
             OwnerConfig: {value: NS.OwnerConfig},
             OwnerConfigList: {value: NS.OwnerConfigList},
