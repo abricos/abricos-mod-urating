@@ -31,7 +31,7 @@ Component.entryPoint = function(NS){
                 action: action
             };
             this.get('appInstance').toVote(vote, function(){
-                console.log(arguments);
+
             }, this);
         }
     }, {

@@ -16,9 +16,6 @@
     "ownerid": {
       "type": "int"
     },
-    "userid": {
-      "type": "int"
-    },
     "voteCount": {
       "type": "int"
     },
@@ -43,6 +40,15 @@
     },
     "vote": {
       "type": "model:Vote"
+    },
+    "isFinished": {
+      "type": "bool"
+    },
+    "isVoting": {
+      "type": "bool"
+    },
+    "isShowResult": {
+      "type": "bool"
     }
   }
 }

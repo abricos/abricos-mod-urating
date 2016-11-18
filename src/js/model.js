@@ -10,6 +10,24 @@ Component.entryPoint = function(NS){
 
     NS.Voting = Y.Base.create('voting', SYS.AppModel, [], {
         structureName: 'Voting',
+    }, {
+        ATTRS: {
+            config: {
+                getter: function(){
+                    if (this._ownerConfig){
+                        return this._ownerConfig;
+                    }
+
+                    var appConfig = this.appInstance.get('config'),
+                        ownerConfigList = appConfig.get('ownerList'),
+                        module = this.get('module'),
+                        type = this.get('type');
+
+                    this._ownerConfig = ownerConfigList.getByOwner(module, type);
+                    return this._ownerConfig;
+                }
+            }
+        }
     });
 
     NS.VotingList = Y.Base.create('votingList', SYS.AppModelList, [], {
@@ -34,5 +52,15 @@ Component.entryPoint = function(NS){
 
     NS.OwnerConfigList = Y.Base.create('ownerConfigList', SYS.AppModelList, [], {
         appItem: NS.OwnerConfig,
+        getByOwner: function(module, type){
+            var ret = null;
+            this.each(function(ownerConfig){
+                if (ownerConfig.get('module') === module
+                    && ownerConfig.get('type') === type){
+                    ret = ownerConfig;
+                }
+            }, this);
+            return ret;
+        }
     });
 };

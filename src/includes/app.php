@@ -424,8 +424,7 @@ class URatingApp extends AbricosApplication {
         );
 
         if ($voting->IsShowResult()){
-            $sScore = $score > 0 ? '+' : ($score < 0 ? '-' : '');
-            $sScore .= $score;
+            $sScore = ($score > 0 ? '+' : '').$score;
 
             $replace['bval'] = Brick::ReplaceVarByData($v['scoreVal'], array(
                 "voting" => $sScore,

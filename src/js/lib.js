@@ -18,7 +18,7 @@ Component.entryPoint = function(NS){
 
     SYS.Application.build(COMPONENT, {}, {
         initializer: function(){
-            this.appStructure(function(){
+            this.config(function(){
                 NS.roles.load(function(){
                     this.initCallbackFire();
                 }, this);
@@ -27,7 +27,7 @@ Component.entryPoint = function(NS){
     }, [], {
         APPS: {},
         ATTRS: {
-            isLoadAppStructure: {value: false},
+            isLoadAppStructure: {value: true},
             Voting: {value: NS.Voting},
             VotingList: {value: NS.VotingList},
             Vote: {value: NS.Vote},

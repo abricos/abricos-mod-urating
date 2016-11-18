@@ -41,7 +41,7 @@ class URatingVoteList extends AbricosModelList {
  * @property string $module
  * @property string $type
  * @property int $ownerid
- * @property int $userid Пользователь объекта для голосования
+ * @property int $userid
  *
  * @property int $voteCount
  * @property int $voteUpCount
@@ -66,6 +66,13 @@ class URatingVoting extends AbricosModel {
     private $voting;
 
     /**
+     * Пользователь сущности для голосования
+     *
+     * @var int
+     */
+    public $userid = 0;
+
+    /**
      * Дата создания (публикации и т.п.) элемента.
      * Необходима для ограничения голосования по времени
      *
@@ -80,7 +87,7 @@ class URatingVoting extends AbricosModel {
      */
     public function IsFinished(){
         $vPeriod = $this->config->votingPeriod;
-        if ($vPeriod === 0){
+        if ($vPeriod === 0 || $this->ownerDate === 0){
             return false;
         }
         return $this->ownerDate + $vPeriod < TIMENOW;
@@ -107,7 +114,8 @@ class URatingVoting extends AbricosModel {
      * @return bool
      */
     public function IsShowResult(){
-        if ($this->config->showResult
+        if (($this->userid > 0 && $this->userid === Abricos::$user->id)
+            || $this->config->showResult
             || $this->IsFinished()
             || !$this->vote->IsEmpty()
         ){
@@ -115,6 +123,24 @@ class URatingVoting extends AbricosModel {
         }
 
         return $this->userid > 0 && Abricos::$user->id === $this->userid;
+    }
+
+    public function ToJSON(){
+        $ret = parent::ToJSON();
+
+        $ret->isFinished = $this->IsFinished();
+        $ret->isVoting = $this->IsVoting();
+        $ret->isShowResult = $this->IsShowResult();
+
+        if (!$ret->isShowResult){
+            unset($ret->score);
+            unset($ret->scoreUp);
+            unset($ret->scoreDown);
+            unset($ret->voteUpCount);
+            unset($ret->voteDownCount);
+        }
+
+        return $ret;
     }
 }
 

@@ -1,13 +1,42 @@
 <!--{widget}-->
-<div id="{i#id}" class="aw-urating">
-	<div class="voting">
-		<div id="{i#status}">
-			<div id="{i#statval}">
-				<div id="{i#bup}" class="bup"></div>
-				<div id="{i#bvalue}" class="bval">—</div>
-				<div id="{i#bdown}" class="bdown"></div>
-				<div class="clear"></div>
-			</div>
-		</div>
-	</div>
+<div class="aw-urating voting {v#status} {v#scoreStatus}">
+    {v#bup}
+    {v#bval}
+    {v#bdown}
+    <div class="clearfix"></div>
 </div>
+
+<!--{guestUp}-->
+<div class="bup"
+     title="Голосовать могут только зарегистрированные пользователи"></div>
+
+<!--{guestVal}-->
+<div class="bval"
+     title="Результат голосования виден только авторизованным пользователям">—</div>
+
+<!--{guestDown}-->
+<div class="bdown"
+     title="Голосовать могут только зарегистрированные пользователи"></div>
+
+<!--{scoreUp}-->
+<div class="bup"></div>
+
+<!--{scoreVal}-->
+<div class="bval"
+     title="Общий рейтинг {v#voteCount}: ↑{v#voteUpCount} и ↓{v#voteDownCount}">{v#voting}</div>
+
+<!--{scoreDown}-->
+<div class="bdown"></div>
+
+<!--{up}-->
+<div class="bup" data-click="this:voteUp"
+     title=""></div>
+
+<!--{val}-->
+<div class="bval"
+     data-click="this:voteAbstain"
+     title="Воздержаться. Всего голосов {v#voteCount}"><i class="fa fa-eye"></i></div>
+
+<!--{down}-->
+<div class="bdown" data-click="this:voteDown"
+     title=""></div>

@@ -3,8 +3,7 @@
   "type": "model",
   "fields": {
     "ownerList": {
-      "type": "modelList:OwnerConfigList",
-      "rolefn": "IsAdminRole"
+      "type": "modelList:OwnerConfigList"
     }
   }
 }

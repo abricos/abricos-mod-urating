@@ -118,7 +118,7 @@ class URatingQuery {
                 
                 SUM(vote) as score,
                 SUM(IF(vote>0,vote,0)) AS scoreUp,
-                SUM(IF(vote<0,vote,0)) AS scoreDown,
+                ABS(SUM(IF(vote<0,vote,0))) AS scoreDown,
                 MAX(voteDate) as votingDate
             FROM ".$db->prefix."urating_vote v
             WHERE v.ownerModule='".bkstr($owner->module)."'
@@ -141,7 +141,6 @@ class URatingQuery {
                 '".bkstr($d['ownerModule'])."',
                 '".bkstr($d['ownerType'])."',
                 ".intval($d['ownerid']).",
-                
                 ".intval($d['voteCount']).",
                 ".intval($d['voteUpCount']).",
                 ".intval($d['voteAbstainCount']).",
