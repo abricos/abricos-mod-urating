@@ -1,51 +1,14 @@
 var Component = new Brick.Component();
 Component.requires = {
     mod: [
-        {name: '{C#MODNAME}', files: ['lib.js']}
+        {name: '{C#MODNAME}', files: ['vote.js']}
     ]
 };
 Component.entryPoint = function(NS){
-    var Y = Brick.YUI,
-        COMPONENT = this,
-        SYS = Brick.mod.sys;
-
-    var UID = Brick.env.user.id | 0;
-
-    NS.UIVotingWidget = Y.Base.create('uiVotingWidget', SYS.AppWidget, [], {
-        onInitAppWidget: function(err, appInstance){
-        },
-        voteUp: function(){
-            this.toVote('up');
-        },
-        voteAbstain: function(){
-            this.toVote('abstain');
-        },
-        voteDown: function(){
-            this.toVote('down');
-        },
-        toVote: function(action){
-            var vote = {
-                module: this.get('ownerModule'),
-                type: this.get('ownerType'),
-                ownerid: this.get('ownerid'),
-                action: action
-            };
-            this.get('appInstance').toVote(vote, function(){
-
-            }, this);
-        }
-    }, {
-        ATTRS: {
-            component: {value: COMPONENT},
-            useExistingWidget: {value: true},
-            ownerModule: {},
-            ownerType: {},
-            ownerid: {}
-        }
-    });
+    var Y = Brick.YUI;
 
     var UIManager = function(){
-        if (UID === 0){
+        if ((Brick.env.user.id | 0) === 0){
             return;
         }
         var instance = this;
@@ -57,20 +20,28 @@ Component.entryPoint = function(NS){
     };
     UIManager.prototype = {
         init: function(){
-            Y.Node.all('.aw-urating.voting').each(function(node){
-                var ownerModule = node.getData('module'),
-                    ownerType = node.getData('type'),
-                    ownerid = node.getData('id') | 0;
+            var Voting = NS.appInstance.get('Voting');
 
-                if (!ownerModule || !ownerType || !ownerid){
+            Y.Node.all('.aw-urating.voting').each(function(node){
+                var data = node.getData('modelData');
+
+                try {
+                    data = Y.JSON.parse(data);
+                } catch (e) {
                     return;
                 }
 
-                new NS.UIVotingWidget({
+                if (!data || !Y.Lang.isObject(data)){
+                    return;
+                }
+
+                var voting = new Voting(Y.merge({
+                    appInstance: NS.appInstance
+                }, data));
+
+                new NS.VotingWidget({
                     srcNode: node,
-                    ownerModule: ownerModule,
-                    ownerType: ownerType,
-                    ownerid: ownerid
+                    voting: voting
                 });
             }, this);
         }

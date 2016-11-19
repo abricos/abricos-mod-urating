@@ -42,6 +42,10 @@ Component.entryPoint = function(NS){
         appItem: NS.Vote,
     });
 
+    NS.ToVote = Y.Base.create('toVote', SYS.AppResponse, [], {
+        structureName: 'ToVote',
+    });
+
     NS.Config = Y.Base.create('config', SYS.AppModel, [], {
         structureName: 'Config',
     });

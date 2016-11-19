@@ -12,6 +12,9 @@ Component.entryPoint = function(NS){
 
     NS.VotingWidget = Y.Base.create('votingWidget', SYS.AppWidget, [], {
         buildTData: function(){
+            return this._buildVotingReplace();
+        },
+        _buildVotingReplace: function(){
             var tp = this.template,
                 voting = this.get('voting'),
                 vote = voting.get('vote'),
@@ -55,7 +58,13 @@ Component.entryPoint = function(NS){
             }
             return replace;
         },
-        onInitAppWidget: function(err, appInstance){
+        _renderVoting: function(){
+            var tp = this.template,
+                node = this.get('boundingBox'),
+                replace = this._buildVotingReplace(),
+                html = tp.replace('widget', replace);
+
+            node.setHTML(html);
         },
         voteUp: function(){
             this.toVote('up');
@@ -75,7 +84,12 @@ Component.entryPoint = function(NS){
                     action: action
                 };
 
-            this.get('appInstance').toVote(vote, function(){
+            this.get('appInstance').toVote(vote, function(err, result){
+                if (result && result.toVote){
+                    var voting = result.toVote.get('voting');
+                    this.set('voting', voting);
+                    this._renderVoting();
+                }
             }, this);
         }
     }, {

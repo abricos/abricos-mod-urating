@@ -32,13 +32,15 @@ Component.entryPoint = function(NS){
             VotingList: {value: NS.VotingList},
             Vote: {value: NS.Vote},
             VoteList: {value: NS.VoteList},
+            ToVote: {value: NS.ToVote},
             Config: {value: NS.Config},
             OwnerConfig: {value: NS.OwnerConfig},
             OwnerConfigList: {value: NS.OwnerConfigList},
         },
         REQS: {
             toVote: {
-                args: ['data']
+                args: ['data'],
+                type: 'response:ToVote'
             },
             config: {
                 attribute: true,

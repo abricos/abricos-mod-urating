@@ -29,7 +29,7 @@ class URatingApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Vote,Voting,Config,OwnerConfig';
+        return 'Vote,ToVote,Voting,Config,OwnerConfig';
     }
 
     public function ResponseToJSON($d){
@@ -399,7 +399,7 @@ class URatingApp extends AbricosApplication {
         return $ret;
     }
 
-    public function VotingHTML(URatingVoting $voting){
+    public function VotingHTML(URatingVoting $voting, $notJUI = false){
         if ($this->CacheExists('brick', 'vote')){
             $brick = $this->Cache('brick', 'vote');
         } else {
@@ -414,14 +414,21 @@ class URatingApp extends AbricosApplication {
         $replace = array(
             'status' => 'ro',
             'scoreStatus' => '',
-            'module' => $voting->module,
-            'type' => $voting->type,
-            'nodeid' => $brick->id.'-'.$voting->ownerid,
-            'id' => $voting->ownerid,
+            'modelData' => '',
+            'pScore' => '',
+            'pVoteCount' => '',
+            'pVoteUpCount' => '',
+            'pVoteDownCount' => '',
             'bup' => $v['guestUp'],
             'bval' => $v['guestVal'],
             'bdown' => $v['guestDown'],
         );
+
+        if (!$notJUI){
+            $json = $voting->ToJSON();
+            $json = json_encode($json);
+            $replace['modelData'] = $json;
+        }
 
         if ($voting->IsShowResult()){
             $sScore = ($score > 0 ? '+' : '').$score;
